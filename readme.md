@@ -39,7 +39,7 @@ ver.0.18 (2012-01-23; 2.04beta)
 
 3. __EasyBotter.php の変更__
 
-    - *EasyBotter.php の `class EasyBotter {` のすぐ下に、  
+    - *EasyBotter.php* の `class EasyBotter {` のすぐ下に、  
       *markov.php* の中身を全て貼り付けてください。
 
 
