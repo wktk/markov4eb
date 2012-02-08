@@ -36,3 +36,7 @@ coding: UTF-8
 
     4. これで準備完了です。
 
+ サンプル
+    そのまま設置した例: @e_markov https://twitter.com/e_markov
+    改造例: @k9_bot https://twitter.com/k9_bot
+
