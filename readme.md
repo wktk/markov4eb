@@ -6,9 +6,6 @@ ver.0.18 (2012-01-23; 2.04beta)
 <https://twitter.com/intent/user?user_id=51408776> (@wktk)
 
 
-****
-
-
 仕様
 ----------
 - bot から見たタイムラインから、最新 20 件 (?) のツイートを取得して動作します。
@@ -19,16 +16,11 @@ ver.0.18 (2012-01-23; 2.04beta)
 - マルコフ連鎖でのリプライも設定できます。
 
 
-****
-
 
 サンプル
 ----------
 - そのまま設置した例: [@e_markov](https://twitter.com/e_markov)  
 - 改造例: [@k9_bot](https://twitter.com/k9_bot)
-
-
-****
 
 
 
@@ -47,7 +39,7 @@ ver.0.18 (2012-01-23; 2.04beta)
 
 3. __EasyBotter.php の変更__
 
-    - *EasyBotter.ph*p の `class EasyBotter {` のすぐ下に、  
+    - *EasyBotter.php の `class EasyBotter {` のすぐ下に、  
       *markov.php* の中身を全て貼り付けてください。
 
 
@@ -64,5 +56,3 @@ ver.0.18 (2012-01-23; 2.04beta)
 
 5. __これで準備完了です。__
 
-
-****
