@@ -1,4 +1,4 @@
-�}���R�t�A�� for EasyBotter
+マルコフ連鎖 for EasyBotter
 ==========
 ver.0.18 (2012-01-23; 2.04beta)  
 
@@ -9,60 +9,60 @@ ver.0.18 (2012-01-23; 2.04beta)
 ****
 
 
-�d�l
+仕様
 ----------
-- bot ���猩���^�C�����C������A�ŐV 20 �� (?) �̃c�C�[�g���擾���ē��삵�܂��B
-- �f�t�H���g�ł́A�c�C�[�g���̔��p # �� URL �͏�������܂��B
-- ���� RT �ƁART ���� QT ���܂ރc�C�[�g�͘A���Ώۂ��珜����܂��B
-- ���A�J�E���g�̃c�C�[�g���E���܂��B
-- �ʏ�c�C�[�g�ł����v���C�����邱�Ƃ�����܂��B
-- �}���R�t�A���ł̃��v���C���ݒ�ł��܂��B
+- bot から見たタイムラインから、最新 20 件 (?) のツイートを取得して動作します。
+- デフォルトでは、ツイート内の半角 # と URL は消去されます。
+- 公式 RT と、RT 又は QT を含むツイートは連鎖対象から除かれます。
+- 鍵アカウントのツイートも拾います。
+- 通常ツイートでもリプライをすることがあります。
+- マルコフ連鎖でのリプライも設定できます。
 
 
 ****
 
 
-�T���v��
+サンプル
 ----------
-- ���̂܂ܐݒu������: [@e_markov](https://twitter.com/e_markov)  
-- ������: [@k9_bot](https://twitter.com/k9_bot)
+- そのまま設置した例: [@e_markov](https://twitter.com/e_markov)  
+- 改造例: [@k9_bot](https://twitter.com/k9_bot)
 
 
 ****
 
 
 
-�g�p�菇
+使用手順
 ----------
-1. __[EasyBotter](http://pha22.net/twitterbot/) �̐ݒu__
+1. __[EasyBotter](http://pha22.net/twitterbot/) の設置__
 
 
-2. __�A�v���P�[�V���� ID �̎擾__
+2. __アプリケーション ID の取得__
 
-    - �uYahoo! JAPAN �f�x���b�p�[�l�b�g���[�N�v�̃A�v���P�[�V���� ID ���A
-      <https://e.developer.yahoo.co.jp/webservices/register_application> ����擾���Ă��������B  
-    - �擾�ɂ́AYahoo! JAPAN �Ƀ��O�C���ł��� ID ���K�v�ł��B  
-    - �u�A�v���P�[�V�����̎�ށv�́u�F�؂�K�v�Ƃ��Ȃ�API���g�����A�v���P�[�V�����v�A�u�T�C�gURL�v�́uURL�Ȃ��v��I�����Ă��������B
-
-
-3. __EasyBotter.php �̕ύX__
-
-    - *EasyBotter.ph*p �� `class EasyBotter {` �̂������ɁA  
-      *markov.php* �̒��g��S�ē\��t���Ă��������B
+    - 「Yahoo! JAPAN デベロッパーネットワーク」のアプリケーション ID を、
+      <https://e.developer.yahoo.co.jp/webservices/register_application> から取得してください。  
+    - 取得には、Yahoo! JAPAN にログインできる ID が必要です。  
+    - 「アプリケーションの種類」は「認証を必要としないAPIを使ったアプリケーション」、「サイトURL」は「URLなし」を選択してください。
 
 
-4. __bot.php �̕ύX__
-    - *bot.php* (���O�ύX���Ă���ꍇ�͂������) �́A
-      `$response = $eb->***( �` );` �̕��тɁA���̕���ǉ����Ă��������B
+3. __EasyBotter.php の変更__
 
-        - �ʏ�POST  
-          `$response = $eb->markov( 'YJDN �̃A�v���P�[�V���� ID' );`
-
-        - ���v���C  
-          `$response = $eb->replymarkov( cron�Ԋu, 'YJDN �̃A�v���P�[�V���� ID' );`
+    - *EasyBotter.ph*p の `class EasyBotter {` のすぐ下に、  
+      *markov.php* の中身を全て貼り付けてください。
 
 
-5. __����ŏ��������ł��B__
+4. __bot.php の変更__
+    - *bot.php* (名前変更している場合はそちらへ) の、
+      `$response = $eb->***( ～ );` の並びに、次の文を追加してください。
+
+        - 通常POST  
+          `$response = $eb->markov( 'YJDN のアプリケーション ID' );`
+
+        - リプライ  
+          `$response = $eb->replymarkov( cron間隔, 'YJDN のアプリケーション ID' );`
+
+
+5. __これで準備完了です。__
 
 
 ****
