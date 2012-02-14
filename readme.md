@@ -2,7 +2,7 @@
 ==========
 ver.0.18 (2012-01-23; 2.04beta)  
 
-<https://github.com/kww/markov4eb>  
+<https://github.com/wktk/markov4eb>  
 <https://twitter.com/intent/user?user_id=51408776> (@wktk)
 
 
