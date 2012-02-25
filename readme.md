@@ -1,4 +1,4 @@
-マルコフ連鎖 for EasyBotter
+マルコフ連鎖 for EasyBotter (EasyMarkov)
 ==========
 ver.0.18 (2012-01-23; 2.04beta)  
 
