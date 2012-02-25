@@ -2,6 +2,27 @@
 // このファイルの中身を EasyBotter.php の class EasyBotter 内に貼りつけてください。
 // v0.18  <?php
     
+    function _mRemove($text){
+        // 都合の悪い文字列を消す関数
+        
+        // エスケープ (&amp; など) を解除
+        $text = html_entity_decode($text);
+        
+        // ツイート時に @screen_name 形式の文字列を含まないようにする
+        // $text = preg_replace('/@[a-zA-Z0-9_]+/', '', $text);
+        
+        // 元ツイートから URL と半角 # を除いておく
+        $text = preg_replace('/https?:[-_#!~*\'()a-zA-Z0-9;\/?:\.\@&=+\$,%#]+|#/', '', $text);
+        
+        // ハッシュタグ削除をしたくない場合は代わりに↓を使用 (無関係な話題を HT に載せるおそれあり)
+        // $text = preg_replace('/https?:[-_#!~*\'()a-zA-Z0-9;\/?:\.\@&=+\$,%#]+/', '', $text);
+        
+        // 英語 HT だけ削除したい (日本語 HT を残せば、HT を連鎖で生成するかも) 場合は代わりに↓を使用
+        // $text = preg_replace('/https?:[-_#!~*\'()a-zA-Z0-9;\/?:\.\@&=+\$,%#]+|#[a-zA-Z0-9_]+/', '', $text);
+        
+        return $text;
+    }
+    
     function markov($appid){
         // タイムライン取得
         $timeline = $this->selectTweets($this->getFriendsTimeline());
@@ -13,8 +34,7 @@
             $markov = array();
             
             foreach ($timeline as $tweet) {
-                
-                // 単語毎に切る
+                // 文字列のエスケープ
                 $text = $this->_mRemove((string)$tweet->text);
                 
                 // 自分のユーザー名を消去
@@ -46,6 +66,7 @@
                 // 置き換えたものを元に戻す
                 foreach ($exc as $key => $val) { $resp = str_replace($key, $val, $resp); }
                 
+                // 単語毎に切る
                 $words = $this->_mXmlParse($resp, 'surface');
                 
                 // 文末フラグとして
@@ -262,24 +283,6 @@
         
         // 送信して取得
         return $http->send()->getBody();
-    }
-    
-    function _mRemove($text){
-        // 都合の悪い文字列を消す関数
-        
-        // エスケープを解除
-        $text = str_replace('&amp;', '&', $text);
-        
-        // 元ツイートから URL と半角 # を除いておく
-        $text = preg_replace('/https?:[-_#!~*\'()a-zA-Z0-9;\/?:\.\@&=+\$,%#]+|#/', '', $text);
-        
-        // ハッシュタグ削除をしたくない場合は代わりに↓を使用 (無関係な話題を HT に載せるおそれあり)
-        // $text = preg_replace('/https?:[-_#!~*\'()a-zA-Z0-9;\/?:\.\@&=+\$,%#]+/', '', $text);
-        
-        // 英語 HT だけ削除したい (日本語 HT を残せば、HT を連鎖で生成するかも) 場合は代わりに↓を使用
-        // $text = preg_replace('/https?:[-_#!~*\'()a-zA-Z0-9;\/?:\.\@&=+\$,%#]+|#[a-zA-Z0-9_]+/', '', $text);
-        
-        return $text;
     }
     
     function _mXmlParse($xml, $pat){
