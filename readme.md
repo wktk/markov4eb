@@ -2,7 +2,7 @@
 ==========
 ver.0.20 (2012-03-07; 2.04beta)  
 
-https://github.com/wktk/markov4eb
+https://github.com/wktk/markov4eb  
 https://twitter.com/wktk
 
 
