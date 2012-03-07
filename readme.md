@@ -1,26 +1,27 @@
 マルコフ連鎖 for EasyBotter (EasyMarkov)
 ==========
-ver.0.18 (2012-01-23; 2.04beta)  
+ver.0.20 (2012-03-07; 2.04beta)  
 
-<https://github.com/wktk/markov4eb>  
-<https://twitter.com/intent/user?user_id=51408776> (@wktk)
+https://github.com/wktk/markov4eb
+https://twitter.com/wktk
 
 
 仕様
 ----------
 - bot から見たタイムラインから、最新 20 件 (?) のツイートを取得して動作します。
-- デフォルトでは、ツイート内の半角 # と URL は消去されます。
+- デフォルトでは、ツイート内の # と URL は消去されます。
 - 公式 RT と、RT 又は QT を含むツイートは連鎖対象から除かれます。
-- 鍵アカウントのツイートも拾います。
-- 通常ツイートでもリプライをすることがあります。
+- *鍵アカウントのツイートは拾わなくなりました。* (0.20 から)
+- 他の bot からのツイートは拾わないことがあります。
+- 通常ツイートでもリプライをすることがあります。(回避もできます)
 - マルコフ連鎖でのリプライも設定できます。
 
 
 
 サンプル
 ----------
-- そのまま設置した例: [@e_markov](https://twitter.com/e_markov)  
-- 改造例: [@k9_bot](https://twitter.com/k9_bot)
+- そのまま設置した例: @[e_markov](https://twitter.com/e_markov)  
+- 改造例: @[k9_bot](https://twitter.com/k9_bot)
 
 
 
