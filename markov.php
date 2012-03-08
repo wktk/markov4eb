@@ -35,7 +35,7 @@
         
         $tl_ = array();
         foreach ($tl as $tweet) {
-            $tweet->source = preg_replace('/<[^>]>/', '', $tweet->source);
+            $tweet->source = preg_replace('/<[^>]+>/', '', $tweet->source);
             if (
                 // bot のツイートは拾わない
                 $tweet->source == 'twittbot.net'
