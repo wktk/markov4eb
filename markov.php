@@ -1,58 +1,106 @@
 //==================================================================================================
 // このファイルの中身を EasyBotter.php の class EasyBotter 内に貼りつけてください。
-// v0.20  <?php
+// このファイルの 120 行目付近まではカスタムできる項目があります。
+// v1.22 // 編集時用→ <?php
     
-    function _mRemove($text){
-        // 都合の悪い文字列を消したりする関数
-        
+    // 都合の悪い文字列を削除する関数
+    function _mRemove($text) {
         // エスケープ (&amp; など) を解除
         $text = html_entity_decode($text);
         
-        // URL っぽい文字列を除く
-        $text = preg_replace('/https?:[-_#!~*\'()a-zA-Z0-9;\/?:\.\@&=+\$,%#]+/', '', $text);
+        // 正規表現を利用した削除
+        $text = preg_replace(array(
+            
+            // @screen_name 形式の文字列
+            // コメントアウトすると通常ツイート時に突然リプライを飛ばすことがあります
+            '/\s*[@＠][a-zA-Z0-9_]+\s*/',
+            
+            // URL っぽい文字列
+            '/https?:[-_#!~*\'()a-zA-Z0-9;\/?:\.\@&=+\$,%#]+/',
+            
+            // メールアドレスっぽい文字列
+            '/[-a-zA-Z0-9\.+_,]+@[-a-zA-Z0-9\.]+\.[a-zA-Z]{2,4}/',
+            
+            // 電話番号っぽい数字の羅列
+            '/\+?\d{0,3}\.?[-\d()]{9,}/',
+            
+            // ハッシュタグ (日本語 HT を生成したい場合は下段に切り替え)
+            '/[#＃]/',
+            // '/[#＃][a-zA-Z0-9_]+/',
+            
+            // '/このように{5,12}/',
+            // '/[,\s]*カンマ[^区切りで]+/',
+            // '/正規(?:表現|を)追加できます/',
+            
+        // マッチした部分を全て削除
+        ), '', $text);
         
-        // メールアドレスっぽい文字列も削除
-        $text = preg_replace('/[-a-zA-Z0-9\.+_,]+@[-a-zA-Z0-9\.]+\.[a-zA-Z]{2,4}/', '', $text);
-        
-        // 電話番号っぽい数字の羅列も削除
-        $text = preg_replace('/\+?\d{0,3}\.?[-\d()]{9,}/', '', $text);
-        
-        // [HT] 全半角の # を削除 (残したい場合はコメントアウトして下さい)
-        $text = str_replace(array('#', '＃'), '', $text);
-        
-        // 英字で始まる HT だけ削除したい場合は上記 [HT] の代わりに↓を使用
-        //  (日本語ハッシュタグを残せば、ハッシュタグを連鎖で生成するかも)
-        // $text = preg_replace('/#[a-zA-Z0-9_]+/', '', $text);
-        
-        // @screen_name 形式の文字列を削除
-        // $text = preg_replace('/@[a-zA-Z0-9_]+/', '', $text);
+        // 文字列での削除 (NG ワード)
+        $text = str_replace(array(
+            '殺',
+            // 'このように',
+            // 'カンマ区切りで',
+            // '単語を追加できます',
+
+        // 一致した部分を全て削除
+        ), '', $text);
         
         return $text;
     }
     
-    function _mChk($tl) {
-        // タイムラインから拾うツイートを選別する関数
+    // タイムラインから拾うツイートをマルコフ連鎖用に選別する関数
+    function _mTLChk($tl) {
+        
+        // 選別しない場合は次行を利用
+        // return $tl;
         
         $tl_ = array();
         foreach ($tl as $tweet) {
             $tweet->source = preg_replace('/<[^>]+>/', '', $tweet->source);
-            if (
-                // bot のツイートは拾わない
-                $tweet->source == 'twittbot.net'
-             || $tweet->source == 'EasyBotter'
-             || $tweet->source == '★ツイ助★＜無料＞ツイッター多機能便利ツール'
+            if (false
                 
-                // 鍵垢の方は拾わない
-             || (string)$tweet->user->protected == "true"
+                // いずれかの条件式が真になる場合拾いません
+                // 偽で拾わない様にしたい場合はその条件式の前に ! を付けて下さい
                 
-                // デフォルトアイコン (タマゴ) の方は拾わない
-             //|| (string)$tweet->user->default_profile_image == "true"
+                // bot のツイート
+                || $tweet->source == 'twittbot.net'
+                || $tweet->source == 'EasyBotter'
+                || $tweet->source == 'Easybotter'
+                || $tweet->source == '★ツイ助★＜無料＞ツイッター多機能便利ツール'
+                || $tweet->source == 'MySweetBot'
+                || $tweet->source == 'BotMaker'
                 
-                // フォロー比が高すぎる方は拾わない
-             //|| (int)$tweet->user->friends_count / ((int)$tweet->user->followers_count + 1) > 10
+                // 鍵垢の方
+                || $tweet->user->protected == "true"
                 
-                // 画像や動画に不適切な内容を含む可能性のあるツイートは拾わない
-             //|| (string)$tweet->possibly_sensitive == "true"
+                // RT, QT を含むツイート
+                || preg_match('/[rqＲｒＱｑ][tｔＴ]/i', $tweet->text)
+                
+                // bot 自身
+                || $tweet->user->screen_name == $this->_screen_name
+                
+                // 以下は TL 選別の設定例です
+                
+                // @wktk のツイートは拾わない
+                //|| $tweet->user->screen_name == "wktk"
+                
+                // プロフィールの名前が正規表現にマッチしない方
+                //||!preg_match('/[a-zA-Z]{5,}/', $tweet->user->name)
+                
+                // 設定言語が日本語でない方
+                //||!$tweet->user->lang == "ja"
+                
+                // プロフィールの紹介文に 転載 を含む方
+                //||stripos($tweet->user->description, '転載')
+                
+                // デフォルトアイコン (タマゴ) の方
+                //|| $tweet->user->default_profile_image == "true"
+                
+                // フォロー比が高すぎる方
+                //|| (int)$tweet->user->friends_count / ((int)$tweet->user->followers_count + 1) > 10
+                
+                // 画像や動画に不適切な内容を含む可能性のあるツイート
+                //|| $tweet->possibly_sensitive == "true"
             ) {}
             
             // 他は拾う
@@ -61,25 +109,36 @@
         return $tl_;
     }
     
-    function markov($appid){
-        // タイムライン取得
-        $timeline = $this->_mChk($this->selectTweets($this->getFriendsTimeline()));
+    // TL を取得する関数
+    function getHomeTimeline() {
+        return $this->_getData("https://api.twitter.com/1/statuses/home_timeline.xml");
         
-        if ((bool)$timeline) {
-            // 連鎖テーブル作成
-            $head   = array();
-            $words  = array();
-            $markov = array();
+        // 20 件以外の TL のツイートを取得したい場合は上の return をコメントアウトし、
+        // 次行後部の count=200 の部分を編集してください。最大値は 200 です
+        return $this->_getData("https://api.twitter.com/1/statuses/home_timeline.xml?count=200");
+    }
+    
+    // マルコフ連鎖でツイートする関数
+    function markov($appid) {
+        // タイムライン取得
+        $timeline = $this->_mTLChk($this->getHomeTimeline());
+        
+        // TL があるか調べる
+        if (!(bool)$timeline) {
+            $result = "EasyMarkov (Tweet) &gt; 連鎖に使用できるツイートが TL にありませんでした。<br />\n";
+            echo $result;
+        } else {
+            $tweets = array();
             
             foreach ($timeline as $tweet) {
                 // 文字列のエスケープ
                 $text = $this->_mRemove((string)$tweet->text);
                 
                 // 自分のユーザー名を消去
-                $text = str_replace('@'.$this->_screen_name, '', $text);
+                $text = str_replace("@{$this->_screen_name}", '', $text);
                 
                 // ツイート内で拾ったユーザー名の、ランダム英文字列への置き換え
-                //  (Yahoo! JAPAN の形態素解析 API の仕様により、
+                //  (利用している形態素解析 API の仕様により、
                 //   一部のユーザー名がバラバラになることがあるので
                 //   一時的にランダムな文字列に置き換えます)
                 $ran = range('a', 'x');
@@ -87,7 +146,7 @@
                 
                 // @screen_name を元ツイートの中から見つける
                 while (preg_match('/@[a-zA-Z0-9_]+/', $text, $matches)) {
-                
+                    
                     // 適当な羅列を作成
                     for ($i = 0, $str = null; $i < 15; $i++) { $str .= $ran[array_rand($ran, 1)]; }
                     
@@ -107,69 +166,27 @@
                 // 単語毎に切る
                 $words = $this->_mXmlParse($resp, 'surface');
                 
-                // 文末フラグとして
-                $words[] = "\n";
-                
-                // 連鎖テーブルに単語を追加
-                if ((bool)$words) {
-                    $pre = null;
-                    foreach ($words as $word) {
-                        if ($pre === null) {
-                            $pre = $word;
-                            $head[] = $word;
-                        } else {
-                            $markov[$pre][] = $word;
-                            $pre = $word;
-                        }
-                    }
-                }
+                $tweets[] = $words;
             }
             
-            // 連鎖開始
-            for ($k=0; $k<10; $k++) {
-                // やり直しが 10 回目になったらやり直しを諦める
-                
-                // 1 つ目の単語を決定
-                $create_text = $pre = $head[array_rand($head)];
-                
-                // 単語数を 30 以下に (140 字制限回避)
-                for ($i=0 ; $i<30 ; $i++) {
-                    // 単語をランダムに決定
-                    $pre = $markov[$pre][array_rand($markov[$pre])];
-                    
-                    // 文の終わり (改行) が来たら連鎖を終える
-                    if ($pre == "\n") { break; }
-                    
-                    // 単語を連結
-                    $create_text .= $pre;
-                }
-                
-                // 連結後の文章が、元ツイートと全く同じ時はやり直し
-                if (in_array($create_text, $timeline)) { continue; }
-                
-                // 連結数が 3 以下の時にはやり直し
-                if ($i > 3) { break; }
-            }
+            // 連鎖用の表にする
+            $table = $this->_mTable($tweets);
+            
+            // マルコフ連鎖で文をつくる
+            $status = $this->_mCreate($table, $timeline);
             
             // 出来た文章を表示
-            echo "EasyMarkov (Tweet) &gt; ". htmlspecialchars($create_text). "<br />\n";
-            
-            // フッターを結合
-            $status = $create_text. $this->_footer;
+            echo "EasyMarkov (Tweet) &gt; ". htmlspecialchars($status). "<br />\n";
             
             // 投稿して結果表示
             $response = $this->setUpdate(array("status" => $status));
             $result   = $this->showResult($response);
-            
-        } else {
-            // 選別後のタイムラインが空だったとき
-            $result = "EasyMarkov (Tweet) &gt; 連鎖に使用できるツイートが TL にありませんでした。<br />\n";
-            echo $result;
         }
         return $result;
     }
     
-    function replymarkov($cron = 2, $appid){
+    // マルコフ連鎖でリプライする関数
+    function replymarkov($cron = 2, $appid) {
         // リプライを取得･選別
         $replies = $this->getReplies();
         $replies = $this->getRecentTweets($replies, $cron * $this->_replyLoopLimit * 3);
@@ -178,7 +195,7 @@
         $replies = $this->removeRepliedTweets($replies);
         
         // 連鎖用にタイムラインも取得
-        $timeline = $this->_mChk($this->selectTweets($this->getFriendsTimeline()));
+        $timeline = $this->_mTLChk($this->getTimeline());
         
         // (リプライループ制限？)
         $replyUsers = array();
@@ -187,7 +204,7 @@
         }
         $countReplyUsers = array_count_values($replyUsers);
         $replies_ = array(); 
-        foreach ($replies as $reply){
+        foreach ($replies as $reply) {
             $userName = (string)$reply->user->screen_name;
             if ($countReplyUsers[$userName] < $this->_replyLoopLimit) {
                 $replies_[] = $reply;
@@ -198,7 +215,7 @@
         
         if (!(bool)$replies) {
             // 新しいリプライを貰ってないとき
-            $result = 'EasyMarkov (Reply) &gt; '. $cron. " 分以内に受け取った @ はないようです。<br />\n";
+            $result = "EasyMarkov (Reply) &gt; $cron 分以内に受け取った @ はないようです。<br />\n";
             echo $result;
             $results[] = $result;
         } elseif (!(bool)$timeline) { 
@@ -207,74 +224,31 @@
             echo $result;
             $results[] = $result;
         } else {
-            // 連鎖テーブル作成
-            $head   = array();
-            $markov = array();
-            $words  = array();
+            $tweets = array();
             
             foreach ($timeline as $tweet) {
                 // 他アカウントに @ しないように元ツイートから @screen_name っぽい文字列を削除
-                $text = preg_replace('/@[a-zA-Z0-9_]*[a-zA-Z0-9_ ]/', '', (string)$tweet->text);
+                $text = preg_replace('/\s*[@＠][a-zA-Z0-9_]+\s*/', '', (string)$tweet->text);
                 
                 // 単語ごとに切る
                 $text  = $this->_mRemove($text);
                 $text  = $this->_mMAParse($text, $appid);
                 $words = $this->_mXmlParse($text, 'surface');
-                
-                // 文末フラグとして
-                $words[] = "\n";
-                
-                // 単語をテーブルに追加
-                if ((bool)$words) {
-                    $pre = null;
-                    foreach ($words as $word) {
-                        if ($pre === null) {
-                            $pre = $word;
-                            $head[] = $word;
-                        } else {
-                            $markov[$pre][] = $word;
-                            $pre = $word;
-                        }
-                    }
-                }
+                $tweets[] = $words;
             }
+            
+            // 連鎖用の表にする
+            $table = $this->_mTable($tweets);
             
             foreach ($replies as $reply) {
                 // リプライ先情報を取得
-                $reply_name = (string)$reply->user->screen_name;
                 $in_reply_to_status_id = (string)$reply->id;
-            
-                // 連鎖開始
-                for ($k=0; $k<10; $k++) {
-                    // やり直しが 10 回目になったらやり直しを諦める
-                    
-                    // 1 つ目の単語をランダムに決定
-                    $create_text = $pre = $head[array_rand($head)];
-                    
-                    // 単語数を 30 以下に (140 字制限回避)
-                    for ($i=0 ; $i<30 ; $i++) {
-                        // 単語を決める
-                        $pre = $markov[$pre][array_rand($markov[$pre])];
-                        
-                        // 文末なら連鎖終了
-                        if ($pre == "\n") { break; }
-                        
-                        // 単語を連結
-                        $create_text .= $pre;
-                    }
-                    
-                    // 連結後の文章が、元ツイートと全く同じ時はやり直し
-                    if (in_array($create_text, $timeline)) { continue; }
-                    
-                    // 連結した単語数が少ない時はやり直し (空リプ削減)
-                    if ($i > 2) { break; }
-                }
+                
+                // マルコフ連鎖で文をつくる
+                $status = $this->_mCreate($table, $timeline, "@{$reply->user->screen_name} ");
                 
                 // 出来た文章を表示
-                echo "EasyMarkov (Reply) &gt; ". htmlspecialchars($create_text). "<br />\n";
-                
-                // 相手ユーザー名とフッターを結合
-                $status = "@". $reply_name. " ". $create_text. $this->_footer;
+                echo "EasyMarkov (Reply) &gt; ". htmlspecialchars($status). "<br />\n";
                 
                 // リプライを送信
                 $response = $this->setUpdate(array(
@@ -287,42 +261,99 @@
                 $results[] = $result;
                 
                 // リプライ成功ならリプライ済みツイートに登録
-                if($response->in_reply_to_status_id){
+                if ($response->in_reply_to_status_id) {
                     $this->_repliedReplies[] = (string)$response->in_reply_to_status_id;
                 }
             } // foreach 各受信済リプ
         } // if タイムラインも選別済リプライもある
         
         // リプライしたものがあれば記録
-        if(!empty($this->_repliedReplies)){
+        if (!empty($this->_repliedReplies)) {
             $this->saveLog();
         }
         return $results;
     }
     
-    function _mMAParse($text, $appid){
-        // Yahoo! に文章を送って、形態素解析の結果を取得する関数
-        
+    // Yahoo! に文章を送って、形態素解析の結果を取得する関数
+    function _mMAParse($text, $appid) {
         require_once 'HTTP/Request2.php';
         $url  = 'http://jlp.yahooapis.jp/MAService/V1/parse';
         $http = new HTTP_Request2($url, HTTP_Request2::METHOD_POST);
         
         // パラメータの設定
         $http->addPostParameter(array(
-            'results'   => 'ma',
-            'appid'     =>  $appid,
-            'response'  => 'surface,pos',
-            'sentence'  =>  $text,
+            'appid'    => $appid,
+            'sentence' => $text,
+            'response' => 'surface', // 読みと品詞 (reading,pos) をカット
         ));
         
         // 送信して取得
         return $http->send()->getBody();
     }
     
-    function _mXmlParse($xml, $pat){
-        // 解析結果から欲しい情報を取り出すための関数
-        preg_match_all("/<". $pat. ">(.+?)<\/". $pat. ">/", $xml, $match);
+    // 解析結果から欲しい情報を取り出す関数
+    function _mXmlParse($xml, $pat) {
+        preg_match_all("/<". $pat. ">(.*)<\/". $pat. ">/", $xml, $match);
         return $match[1];
     }
     
+    // マルコフ連鎖のマップをつくる関数
+    function _mTable($tweets) {
+       /* この形態素解析 API では "[[START]]", "[[END]]" は
+        * array("[", "[", "END", "]", "]") の様に分割されるので、
+        * 単語に "[[START]]" や "[[END]]" が入ることは考慮しない
+        */
+        
+        $table = array();
+        foreach ($tweets as $words) {
+            if ((bool)$words) {
+                $pre = "[[START]]";
+                foreach ($words as $word) {
+                    $table[$pre][] = $word;
+                    $pre = $word;
+                }
+                $table[$pre][] = "[[END]]";
+            }
+        }
+        return $table;
+    }
+    
+    // マップから文を組み立てる関数
+    function _mCreate($table, $timeline, $replyto = '') {
+        // フッタとリプ先ユーザー名の長さ
+        $length = mb_strlen($this->_footer. $replyto, "UTF-8");
+        
+        // 再試行が 10 回目になったら再試行を諦める
+        for ($k=0; $k<10; $k++) {
+            $text = '';
+            $prev = "[[START]]";
+            
+            // 連鎖開始
+            for ($i = 0; ; $i++) {
+                // 単語をランダムに決定
+                $prev = $table[$prev][array_rand($table[$prev])];
+                
+                // 文末なら終える
+                if ($prev == "[[END]]") { break; }
+                
+                // 単語を連結
+                $text .= $prev;
+                
+                // 長くなり過ぎたら適当に切って終了
+                if (mb_strlen($text, "UTF-8") + $length > 140) {
+                    $text = mb_substr($text, 0, 140 - $length, "UTF-8");
+                    break;
+                }
+            }
+            
+            // 連結後の文章が、元ツイートと全く同じ時は再試行 (丸パクリ削減)
+            if (in_array($text, $timeline)) { continue; }
+            
+            // 連結数が 4 以上なら完成、他は再試行
+            if ($i > 3) { break; }
+        }
+            
+        // フッタとリプ先も付けて返す
+        return $replyto. $text. $this->_footer;
+    }
 //==================================================================================================
