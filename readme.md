@@ -1,19 +1,20 @@
-マルコフ連鎖 for EasyBotter (EasyMarkov)
+マルコフ連鎖 for EasyBotter
 ==========
-ver.0.20 (2012-03-07; 2.04beta)  
+v1.22 (2012-03-13; 2.04beta)  
+  
+EasyMarkov  
 
 https://github.com/wktk/markov4eb  
 https://twitter.com/wktk
 
 
-仕様
+主な仕様
 ----------
-- bot から見たタイムラインから、最新 20 件 (?) のツイートを取得して動作します。
-- デフォルトでは、ツイート内の # と URL は消去されます。
+- bot から見たタイムラインから、最新 20 件のツイートを取得して動作します。
+- TL 上のツイート内の # や URL などは除去されます。
 - 公式 RT と、RT 又は QT を含むツイートは連鎖対象から除かれます。
-- *鍵アカウントのツイートは拾わなくなりました。* (0.20 から)
-- 他の bot からのツイートは拾わないことがあります。
-- 通常ツイートでもリプライをすることがあります。(回避もできます)
+- 鍵アカウントのツイートは拾いません。
+- 他の bot からのツイート (twittbot.net, EasyBotter 等) は拾いません。
 - マルコフ連鎖でのリプライも設定できます。
 
 
@@ -34,8 +35,8 @@ https://twitter.com/wktk
 
     - 「Yahoo! JAPAN デベロッパーネットワーク」のアプリケーション ID を、
       <https://e.developer.yahoo.co.jp/webservices/register_application> から取得してください。  
-    - 取得には、Yahoo! JAPAN にログインできる ID が必要です。  
-    - 「アプリケーションの種類」は「認証を必要としないAPIを使ったアプリケーション」、「サイトURL」は「URLなし」を選択してください。
+        - 取得には、Yahoo! JAPAN にログインできる ID が必要です。  
+        - 「アプリケーションの種類」は「認証を必要としないAPIを使ったアプリケーション」、「サイトURL」は「URLなし」を選択してください。
 
 
 3. __EasyBotter.php の変更__
@@ -45,6 +46,7 @@ https://twitter.com/wktk
 
 
 4. __bot.php の変更__
+
     - *bot.php* (名前変更している場合はそちらへ) の、
       `$response = $eb->***( ～ );` の並びに、次の文を追加してください。
 

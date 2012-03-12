@@ -293,17 +293,12 @@
     
     // 解析結果から欲しい情報を取り出す関数
     function _mXmlParse($xml, $pat) {
-        preg_match_all("/<". $pat. ">(.*)<\/". $pat. ">/", $xml, $match);
+        preg_match_all("/<". $pat. ">(.+?)<\/". $pat. ">/", $xml, $match);
         return $match[1];
     }
     
     // マルコフ連鎖のマップをつくる関数
-    function _mTable($tweets) {
-       /* この形態素解析 API では "[[START]]", "[[END]]" は
-        * array("[", "[", "END", "]", "]") の様に分割されるので、
-        * 単語に "[[START]]" や "[[END]]" が入ることは考慮しない
-        */
-        
+    function _mTable($tweets) {        
         $table = array();
         foreach ($tweets as $words) {
             if ((bool)$words) {
