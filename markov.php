@@ -195,7 +195,7 @@
         $replies = $this->removeRepliedTweets($replies);
         
         // 連鎖用にタイムラインも取得
-        $timeline = $this->_mTLChk($this->getTimeline());
+        $timeline = $this->_mTLChk($this->getHomeTimeline());
         
         // (リプライループ制限？)
         $replyUsers = array();
