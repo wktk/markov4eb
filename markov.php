@@ -301,38 +301,34 @@
     function _mTable($tweets) {        
         $table = array();
         foreach ($tweets as $words) {
-            if ((bool)$words) {
-                $pre = "[[START]]";
-                foreach ($words as $word) {
-                    $table[$pre][] = $word;
-                    $pre = $word;
-                }
-                $table[$pre][] = "[[END]]";
-            }
+            $prev = "[[START]]";
+            foreach ($words as $word) $prev = $table[$prev][] = $word;
+            $table[$prev][] = "[[END]]";
         }
         return $table;
     }
     
     // マップから文を組み立てる関数
     function _mCreate($table, $timeline, $replyto = '') {
+        
         // フッタとリプ先ユーザー名の長さ
         $length = mb_strlen($this->_footer. $replyto, "UTF-8");
         
         // 再試行が 10 回目になったら再試行を諦める
         for ($k=0; $k<10; $k++) {
             $text = '';
-            $prev = "[[START]]";
+            $word = "[[START]]";
             
             // 連鎖開始
             for ($i = 0; ; $i++) {
                 // 単語をランダムに決定
-                $prev = $table[$prev][array_rand($table[$prev])];
+                $word = $table[$word][array_rand($table[$word])];
                 
                 // 文末なら終える
-                if ($prev == "[[END]]") { break; }
+                if ($word == "[[END]]") { break; }
                 
                 // 単語を連結
-                $text .= $prev;
+                $text .= $word;
                 
                 // 長くなり過ぎたら適当に切って終了
                 if (mb_strlen($text, "UTF-8") + $length > 140) {
