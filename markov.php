@@ -77,7 +77,7 @@
                 // bot 自身
                 || $tweet->user->screen_name == $this->_screen_name
                 
-                // リツイート
+                // 公式 RT
                 || preg_match('/^RT/', $tweet->text)
                 
                 // 以下は TL 選別の設定例です
@@ -112,11 +112,9 @@
     
     // TL を取得する関数
     function getHomeTimeline() {
-        return $this->_getData("https://api.twitter.com/1/statuses/home_timeline.xml");
-        
-        // 20 件以外の TL のツイートを取得したい場合は上の return をコメントアウトし、
-        // 次行後部の count=200 の部分をお好みで設定してください。最大値は 200 です
-        return $this->_getData("https://api.twitter.com/1/statuses/home_timeline.xml?count=200");
+        // 30 件以外の TL のツイートを取得したい場合は count=30 の部分をお好みで設定してください。
+        // 最大値は 200 ですが、多く設定し過ぎると処理に時間がかかるのでご注意ください
+        return $this->_getData("https://api.twitter.com/1/statuses/home_timeline.xml?count=30");
     }
     
     // マルコフ連鎖でツイートする関数
@@ -267,7 +265,10 @@
             foreach ($words as $word) $buff = $table[$buff][] = $word;
             $table[$buff][] = "[[END]]";
         }
-        echo "<!-- \n". print_r($table, true). "-->\n";
+        echo '<a href="#" onclick="document.getElementById('."'table').style.display='block';return false".'">テーブルを表示</a><br />'.
+             '<div id="table" style="display:none">'. 
+             preg_replace(array("/ {4}/","/\n/"),array(' ','<br />'),htmlspecialchars(print_r($table, true))). 
+             '<a href="#" onclick="document.getElementById('."'table').style.display='none';return false".'">テーブルを非表示</a></div>';
         return $table;
     }
     
