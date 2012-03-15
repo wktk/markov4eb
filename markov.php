@@ -265,10 +265,11 @@
             foreach ($words as $word) $buff = $table[$buff][] = $word;
             $table[$buff][] = "[[END]]";
         }
-        echo '<a href="#" onclick="document.getElementById('."'table').style.display='block';return false".'">テーブルを表示</a><br />'.
-             '<div id="table" style="display:none">'. 
-             preg_replace(array("/ {4}/","/\n/"),array(' ','<br />'),htmlspecialchars(print_r($table, true))). 
-             '<a href="#" onclick="document.getElementById('."'table').style.display='none';return false".'">テーブルを非表示</a></div>';
+        $id = 'table'. microtime();
+        echo '<a href="#" onclick="document.getElementById('."'{$id}').style.display='block';return false".'">テーブルを表示</a><br />'.
+             "<div id='{$id}' style='display:none'>". 
+             str_replace(array("    ",'>','<',"\n"),array(' ','&gt;','&lt;','<br>'),print_r($table, true)). 
+             '<a href="#" onclick="document.getElementById('."'{$id}').style.display='none';return false".'">テーブルを非表示</a></div>';
         return $table;
     }
     
