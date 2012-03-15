@@ -112,9 +112,9 @@
     
     // TL を取得する関数
     function getHomeTimeline() {
-        // 15 件以外の TL のツイートを取得したい場合は count=30 の部分をお好みで設定してください。
+        // 30 件以外の TL のツイートを取得したい場合は count=30 の部分をお好みで設定してください。
         // 最大値は 200 ですが、多く設定し過ぎると処理に時間がかかるのでご注意ください
-        return $this->_getData("https://api.twitter.com/1/statuses/home_timeline.xml?count=15");
+        return $this->_getData("https://api.twitter.com/1/statuses/home_timeline.xml?count=30");
     }
     
     // マルコフ連鎖でツイートする関数
