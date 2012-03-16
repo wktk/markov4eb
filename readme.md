@@ -56,6 +56,13 @@ https://twitter.com/wktk
         - リプライ  
           `$response = $eb->replymarkov( cron間隔, 'YJDN のアプリケーション ID' );`
 
+5. __Yahoo! デベロッパーネットワークのクレジット表示__
 
-5. __これで準備完了です。__
+    - Yahoo! JAPAN の [ソフトウエアに関する規則（ガイドライン）](http://docs.yahoo.co.jp/docs/info/terms/chapter1.html#cf5th) 
+      により、Yahoo! JAPAN が提供する API の利用者は、Web サイトにクレジットを表示する必要があります。
+      *bot 用の Web サイトをお持ちの場合* は、[Yahoo!デベロッパーネットワーク - クレジットの表示](http://developer.yahoo.co.jp/attribution/) 
+      に従いクレジット表示を行なってください。
+
+
+6. __これで準備完了です。__
 
