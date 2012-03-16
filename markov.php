@@ -10,6 +10,7 @@
         
         // 正規表現を利用した削除
         $text = preg_replace(array(
+            // bot 自身のユーザー名
             "/[@＠]{$this->_screen_name}/",
             
             // @screen_name 形式の文字列
@@ -261,9 +262,11 @@
     function _mTable($tweets) {        
         $table = array();
         foreach ($tweets as $words) {
-            $buff = "[[START]]";
-            foreach ($words as $word) $buff = $table[$buff][] = $word;
-            $table[$buff][] = "[[END]]";
+            if (count($words) > 3) {
+                $buff = "[[START]]";
+                foreach ($words as $word) $buff = $table[$buff][] = $word;
+                $table[$buff][] = "[[END]]";
+            }
         }
         
         // 表を出力する (デバッグ用)
