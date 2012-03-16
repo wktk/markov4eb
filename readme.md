@@ -16,6 +16,7 @@ https://twitter.com/wktk
 - 鍵アカウントのツイートは拾いません。
 - twittbot.net, EasyBotter 等からのツイートは拾いません。
 - マルコフ連鎖でのリプライも設定できます。
+- 単語への分割に Yahoo! JAPAN の [日本語形態素解析 Web API](http://developer.yahoo.co.jp/webapi/jlp/ma/v1/parse.html) を利用しています。
 
 
 
