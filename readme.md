@@ -1,6 +1,6 @@
 マルコフ連鎖 for EasyBotter
 ==========
-v1.22 (2012-03-13; 2.04beta)  
+v1.24 (2012-03-16; 2.04beta)  
   
 EasyMarkov  
 
@@ -10,12 +10,13 @@ https://twitter.com/wktk
 
 主な仕様
 ----------
-- bot から見たタイムラインから、最新 20 件のツイートを取得して動作します。
+- bot から見たタイムラインから、最新 30 件のツイートを取得して動作します。
 - TL 上のツイート内の # や URL などは除去されます。
-- 公式 RT と、RT 又は QT を含むツイートは連鎖対象から除かれます。
+- RT の内容は連鎖対象から除かれます。
 - 鍵アカウントのツイートは拾いません。
-- 他の bot からのツイート (twittbot.net, EasyBotter 等) は拾いません。
+- twittbot.net, EasyBotter 等からのツイートは拾いません。
 - マルコフ連鎖でのリプライも設定できます。
+- 単語への分割に Yahoo! JAPAN の [日本語形態素解析 Web API](http://developer.yahoo.co.jp/webapi/jlp/ma/v1/parse.html) を利用しています。
 
 
 
@@ -56,6 +57,13 @@ https://twitter.com/wktk
         - リプライ  
           `$response = $eb->replymarkov( cron間隔, 'YJDN のアプリケーション ID' );`
 
+5. __Yahoo! デベロッパーネットワークのクレジット表示__
 
-5. __これで準備完了です。__
+    - Yahoo! JAPAN の [ソフトウエアに関する規則（ガイドライン）](http://docs.yahoo.co.jp/docs/info/terms/chapter1.html#cf5th) 
+      により、Yahoo! JAPAN が提供する API の利用者は、Web サイトにクレジットを表示する必要があります。
+      *bot 用の Web サイトをお持ちの場合* は、[Yahoo!デベロッパーネットワーク - クレジットの表示](http://developer.yahoo.co.jp/attribution/) 
+      に従いクレジット表示を行なってください。
+
+
+6. __これで準備完了です。__
 
