@@ -10,22 +10,19 @@
         
         // 正規表現を利用した削除
         $text = preg_replace(array(
-            // bot 自身のユーザー名
-            "/[@＠]{$this->_screen_name}/",
-            
             // @screen_name 形式の文字列
             // コメントアウトすると通常ツイート時に突然リプライを飛ばせます
-            '/[@＠][a-zA-Z0-9_]+/',
+            '/@[a-zA-Z0-9_]+/',
             
             // URL っぽい文字列
             '/https?:\/\/\S+/',
             
             // ハッシュタグ (日本語 HT を生成したい場合は下段に切り替え)
-            '/[#＃]/',
+            '/#/',
             // '/[#＃][a-zA-Z0-9_]+/',
             
             // RT, QT 以降の文字列
-            '/[RrＲｒQqＱｑ][TtｔＴ].*$/',
+            '/[RrQq][Tt].*$/',
             
             // '/このように{5,12}/',
             // '/[,\s]*カンマ[^区切りで]+/',
@@ -37,6 +34,7 @@
         // 文字列での削除 (NG ワード)
         $text = str_replace(array(
             '殺',
+            "@{$this->_screen_name}",
             // 'このように',
             // 'カンマ区切りで',
             // '単語を追加できます',
@@ -140,7 +138,7 @@
             //  バラバラになることがあるので一時的に置き換えます)
             $ran = range('a', 'x');
             $exc = array();
-            while (preg_match('/[＠@][a-zA-Z0-9_]+/', $text, $matches)) {
+            while (preg_match('/@[a-zA-Z0-9_]+/', $text, $matches)) {
                 for ($i = 0, $str = ''; $i < 15; $i++) $str .= $ran[array_rand($ran, 1)];
                 $text = str_replace($matches[0], $str, $text);
                 $exc[$str] = $matches[0];
@@ -199,7 +197,7 @@
         $tweets = array();
         foreach ($timeline as $tweet) {
             // @screen_name っぽい文字列を削除
-            $text = preg_replace('/\s*[@＠][a-zA-Z0-9_]+\s*/', '', (string)$tweet->text);
+            $text = preg_replace('/\s*@[a-zA-Z0-9_]+\s*/', '', (string)$tweet->text);
             
             // 単語ごとに切る
             $text  = $this->_mRemove($text);
