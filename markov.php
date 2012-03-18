@@ -236,11 +236,16 @@
     // Yahoo! に文章を送って、形態素解析の結果を取得する関数
     function _mMAParse($text, $appid) {
         $url  = 'http://jlp.yahooapis.jp/MAService/V1/parse';
-        $data = array('http' => array('method' => 'POST', 'content' => http_build_query(array(
+        $content = http_build_query(array(
             'appid'    => $appid,
             'sentence' => $text,
             'response' => 'surface', // 読みと品詞 (reading,pos) をカット
-        ))));
+        ));
+        $data = array('http' => array(
+            'method' => 'POST',
+            'header' => "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: ". strlen($content),
+            'content' => $content,
+        ));
         return file_get_contents($url, false, stream_context_create($data));
     }
     
