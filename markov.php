@@ -1,7 +1,7 @@
 //==================================================================================================
 // このファイルの中身を EasyBotter.php の class EasyBotter 内に貼りつけてください。
 // このファイルの 120 行目付近まではカスタムできる項目があります。
-// v1.24 // 編集時用→ <?php
+// v1.26 // 編集時用→ <?php
     
     // 都合の悪い文字列を削除する関数
     function _mRemove($text) {
@@ -10,22 +10,19 @@
         
         // 正規表現を利用した削除
         $text = preg_replace(array(
-            // bot 自身のユーザー名
-            "/[@＠]{$this->_screen_name}/",
-            
             // @screen_name 形式の文字列
             // コメントアウトすると通常ツイート時に突然リプライを飛ばせます
-            '/[@＠][a-zA-Z0-9_]+/',
+            '/@[a-zA-Z0-9_]+/',
             
             // URL っぽい文字列
             '/https?:\/\/\S+/',
             
             // ハッシュタグ (日本語 HT を生成したい場合は下段に切り替え)
-            '/[#＃]/',
-            // '/[#＃][a-zA-Z0-9_]+/',
+            '/#/',
+            // '/#[a-zA-Z0-9_]+/',
             
             // RT, QT 以降の文字列
-            '/[RrＲｒQqＱｑ][TtｔＴ].*$/',
+            '/[RrQq][Tt].*$/',
             
             // '/このように{5,12}/',
             // '/[,\s]*カンマ[^区切りで]+/',
@@ -37,6 +34,7 @@
         // 文字列での削除 (NG ワード)
         $text = str_replace(array(
             '殺',
+            "@{$this->_screen_name}",
             // 'このように',
             // 'カンマ区切りで',
             // '単語を追加できます',
@@ -131,16 +129,16 @@
         }
         
         $tweets = array();
-        foreach ($timeline as $tweet) {
+        foreach ($timeline as &$tweet) {
             // 文字列のエスケープ
-            $text = $this->_mRemove((string)$tweet->text);
+            $tweet = $this->_mRemove((string)$tweet->text);
             
             // ツイート内で拾ったユーザー名の、ランダム英文字列への置き換え
             //  (形態素解析 API の仕様により、一部のユーザー名が
             //  バラバラになることがあるので一時的に置き換えます)
             $ran = range('a', 'x');
             $exc = array();
-            while (preg_match('/[＠@][a-zA-Z0-9_]+/', $text, $matches)) {
+            while (preg_match('/@[a-zA-Z0-9_]+/', $text, $matches)) {
                 for ($i = 0, $str = ''; $i < 15; $i++) $str .= $ran[array_rand($ran, 1)];
                 $text = str_replace($matches[0], $str, $text);
                 $exc[$str] = $matches[0];
@@ -157,6 +155,7 @@
             
             $tweets[] = $words;
         }
+        unset($tweet);
         
         // 連鎖用の表にする
         $table = $this->_mTable($tweets);
@@ -197,20 +196,23 @@
         }
         
         $tweets = array();
-        foreach ($timeline as $tweet) {
+        foreach ($timeline as &$tweet) {
             // @screen_name っぽい文字列を削除
-            $text = preg_replace('/\s*[@＠][a-zA-Z0-9_]+\s*/', '', (string)$tweet->text);
+            $tweet = preg_replace('/\s*@[a-zA-Z0-9_]+\s*/', '', (string)$tweet->text);
+            
+            // エスケープ
+            $tweet = $this->_mRemove($tweet);
             
             // 単語ごとに切る
-            $text  = $this->_mRemove($text);
-            $text  = $this->_mMAParse($text, $appid);
+            $text  = $this->_mMAParse($tweet, $appid);
             $tweets[] = $this->_mXmlParse($text, 'surface');
         }
+        unset($tweet);
         
         // 連鎖用の表にする
         $table = $this->_mTable($tweets);
         
-        foreach ($replies as $reply) {            
+        foreach ($replies as $reply) {
             // マルコフ連鎖で文をつくる
             $status = $this->_mCreate($table, $timeline, "@{$reply->user->screen_name} ");
             
@@ -237,19 +239,18 @@
     
     // Yahoo! に文章を送って、形態素解析の結果を取得する関数
     function _mMAParse($text, $appid) {
-        require_once 'HTTP/Request2.php';
         $url  = 'http://jlp.yahooapis.jp/MAService/V1/parse';
-        $http = new HTTP_Request2($url, HTTP_Request2::METHOD_POST);
-        
-        // パラメータの設定
-        $http->addPostParameter(array(
+        $content = http_build_query(array(
             'appid'    => $appid,
             'sentence' => $text,
             'response' => 'surface', // 読みと品詞 (reading,pos) をカット
         ));
-        
-        // 送信して取得
-        return $http->send()->getBody();
+        $data = array('http' => array(
+            'method' => 'POST',
+            'header' => "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: ". strlen($content),
+            'content' => $content,
+        ));
+        return file_get_contents($url, false, stream_context_create($data));
     }
     
     // 解析結果から欲しい情報を取り出す関数
