@@ -131,7 +131,7 @@
         $tweets = array();
         foreach ($timeline as &$tweet) {
             // 文字列のエスケープ
-            $tweet = $this->_mRemove((string)$tweet->text);
+            $text = $tweet = $this->_mRemove((string)$tweet->text);
             
             // ツイート内で拾ったユーザー名の、ランダム英文字列への置き換え
             //  (形態素解析 API の仕様により、一部のユーザー名が
