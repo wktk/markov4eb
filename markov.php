@@ -1,7 +1,7 @@
 //==================================================================================================
 // このファイルの中身を EasyBotter.php の class EasyBotter 内に貼りつけてください。
 // このファイルの 120 行目付近まではカスタムできる項目があります。
-// v1.24 // 編集時用→ <?php
+// v1.26 // 編集時用→ <?php
     
     // 都合の悪い文字列を削除する関数
     function _mRemove($text) {
@@ -129,9 +129,9 @@
         }
         
         $tweets = array();
-        foreach ($timeline as $tweet) {
+        foreach ($timeline as &$tweet) {
             // 文字列のエスケープ
-            $text = $this->_mRemove((string)$tweet->text);
+            $text = $tweet = $this->_mRemove((string)$tweet->text);
             
             // ツイート内で拾ったユーザー名の、ランダム英文字列への置き換え
             //  (形態素解析 API の仕様により、一部のユーザー名が
@@ -155,6 +155,7 @@
             
             $tweets[] = $words;
         }
+        unset($tweet);
         
         // 連鎖用の表にする
         $table = $this->_mTable($tweets);
@@ -195,20 +196,23 @@
         }
         
         $tweets = array();
-        foreach ($timeline as $tweet) {
+        foreach ($timeline as &$tweet) {
             // @screen_name っぽい文字列を削除
-            $text = preg_replace('/\s*@[a-zA-Z0-9_]+\s*/', '', (string)$tweet->text);
+            $tweet = preg_replace('/\s*@[a-zA-Z0-9_]+\s*/', '', (string)$tweet->text);
+            
+            // エスケープ
+            $tweet = $this->_mRemove($tweet);
             
             // 単語ごとに切る
-            $text  = $this->_mRemove($text);
-            $text  = $this->_mMAParse($text, $appid);
+            $text  = $this->_mMAParse($tweet, $appid);
             $tweets[] = $this->_mXmlParse($text, 'surface');
         }
+        unset($tweet);
         
         // 連鎖用の表にする
         $table = $this->_mTable($tweets);
         
-        foreach ($replies as $reply) {            
+        foreach ($replies as $reply) {
             // マルコフ連鎖で文をつくる
             $status = $this->_mCreate($table, $timeline, "@{$reply->user->screen_name} ");
             
