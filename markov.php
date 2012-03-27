@@ -6,7 +6,9 @@
     // 都合の悪い文字列を削除する関数
     function _mRemove($text) {
         // HTML エンティティをデコード
-        $text = html_entity_decode(str_replace('&amp;', '&', $text), ENT_QUOTES, 'UTF-8');
+        $text = str_replace(array('&amp;','&#39;'), array('&',"'"), $text);
+        $text = mb_decode_numericentity($text, array(0x0, 0x10000, 0, 0xfffff), "utf-8");
+        $text = html_entity_decode($text), ENT_QUOTES, 'UTF-8');
         
         // 正規表現を利用した削除
         $text = preg_replace(array(
@@ -17,9 +19,9 @@
             // URL っぽい文字列
             '/https?:\/\/\S+/',
             
-            // ハッシュタグ (日本語 HT を生成したい場合は下段に切り替え)
-            '/#/',
-            // '/#[a-zA-Z0-9_]+/',
+            // ハッシュタグ
+            //'/#/',            // ハッシュタグ化をすべて回避する場合
+            '/#[a-zA-Z0-9_]+/', // 日本語ハッシュタグを生成したい場合,
             
             // RT, QT 以降の文字列
             '/[RrQq][Tt].*$/',
