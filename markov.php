@@ -8,7 +8,7 @@
         // HTML エンティティをデコード
         $text = str_replace(array('&amp;','&#39;'), array('&',"'"), $text);
         $text = mb_decode_numericentity($text, array(0x0, 0x10000, 0, 0xfffff), "utf-8");
-        $text = html_entity_decode($text), ENT_QUOTES, 'UTF-8');
+        $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
         
         // 正規表現を利用した削除
         $text = preg_replace(array(
@@ -82,6 +82,7 @@
                 || preg_match('/^RT/', $tweet->text)
                 
                 // 以下は TL 選別の設定例です
+                // 試してないのでうまく動かないかも知れません
                 
                 // @wktk のツイートは拾わない
                 //|| $tweet->user->screen_name == "wktk"
