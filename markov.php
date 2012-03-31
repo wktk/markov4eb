@@ -6,7 +6,7 @@
     // 都合の悪い文字列を削除する関数
     function _mRemove($text) {
         // HTML エンティティをデコード
-        $text = str_replace(array('&amp;','&#39;'), array('&',"'"), $text);
+        $text = str_replace(array('&amp;','&#039;'), array('&',"'"), $text);
         $text = mb_decode_numericentity($text, array(0x0, 0x10000, 0, 0xfffff), "utf-8");
         $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
         
