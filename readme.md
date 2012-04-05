@@ -26,7 +26,6 @@ https://twitter.com/wktk
 
 
 2. __アプリケーション ID の取得__
-
     - 「Yahoo! JAPAN デベロッパーネットワーク」のアプリケーション ID を、
       <https://e.developer.yahoo.co.jp/webservices/register_application> から取得してください。  
         - 取得には、Yahoo! JAPAN にログインできる ID が必要です。  
@@ -34,13 +33,11 @@ https://twitter.com/wktk
 
 
 3. __EasyBotter.php の変更__
-
     - *EasyBotter.php* の `class EasyBotter {` の中に、  
       [*markov.php*](https://raw.github.com/wktk/markov4eb/master/markov.php) の中身を全て貼り付けてください。
 
 
 4. __bot.php の変更__
-
     - *bot.php* (変更している場合はそちらへ) の、
       `$response = $eb->***( ～ );` の並びに、次の文を追加してください。
 
@@ -51,7 +48,6 @@ https://twitter.com/wktk
           `$response = $eb->replymarkov( cron間隔, 'YJDN のアプリケーション ID' );`
 
 5. __Yahoo! デベロッパーネットワークのクレジット表示__
-
     - Yahoo! JAPAN の [ソフトウエアに関する規則（ガイドライン）](http://docs.yahoo.co.jp/docs/info/terms/chapter1.html#cf5th) 
       により、Yahoo! JAPAN が提供する API の利用者は、Web サイトにクレジットを表示する必要があります。
       bot 用の Web サイトをお持ちの場合は、[Yahoo!デベロッパーネットワーク - クレジットの表示](http://developer.yahoo.co.jp/attribution/) 
