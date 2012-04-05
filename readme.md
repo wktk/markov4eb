@@ -20,13 +20,6 @@ https://twitter.com/wktk
 
 
 
-サンプル
-----------
-- そのまま設置した例: @[e_markov](https://twitter.com/e_markov)  
-- 改造例: @[k9_bot](https://twitter.com/k9_bot)
-
-
-
 使用手順
 ----------
 1. __[EasyBotter](http://pha22.net/twitterbot/) の設置__
@@ -42,13 +35,13 @@ https://twitter.com/wktk
 
 3. __EasyBotter.php の変更__
 
-    - *EasyBotter.php* の `class EasyBotter {` のすぐ下に、  
+    - *EasyBotter.php* の `class EasyBotter {` の中に、  
       [*markov.php*](https://raw.github.com/wktk/markov4eb/master/markov.php) の中身を全て貼り付けてください。
 
 
 4. __bot.php の変更__
 
-    - *bot.php* (名前変更している場合はそちらへ) の、
+    - *bot.php* (変更している場合はそちらへ) の、
       `$response = $eb->***( ～ );` の並びに、次の文を追加してください。
 
         - 通常POST  
@@ -61,9 +54,10 @@ https://twitter.com/wktk
 
     - Yahoo! JAPAN の [ソフトウエアに関する規則（ガイドライン）](http://docs.yahoo.co.jp/docs/info/terms/chapter1.html#cf5th) 
       により、Yahoo! JAPAN が提供する API の利用者は、Web サイトにクレジットを表示する必要があります。
-      *bot 用の Web サイトをお持ちの場合* は、[Yahoo!デベロッパーネットワーク - クレジットの表示](http://developer.yahoo.co.jp/attribution/) 
+      bot 用の Web サイトをお持ちの場合は、[Yahoo!デベロッパーネットワーク - クレジットの表示](http://developer.yahoo.co.jp/attribution/) 
       に従いクレジット表示を行なってください。
 
 
 6. __これで準備完了です。__
+    - おつかれさまでした。
 
