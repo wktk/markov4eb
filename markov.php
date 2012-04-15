@@ -1,7 +1,11 @@
-//==================================================================================================
-// このファイルの中身を EasyBotter.php の class EasyBotter 内に貼りつけてください。
-// このファイルの 120 行目付近まではカスタムできる項目があります。
-// v1.26 // 編集時用→ <?php
+/*==================================================================================================
+ * このファイルの中身を EasyBotter.php の class EasyBotter 内に貼りつけてください。
+ * このファイルの 135 行目付近まではカスタムできる項目があります。
+ * 
+ * https://github.com/wktk/markov4eb (v1.30)
+ * https://twitter.com/wktk
+ *
+ *<?php //*/
     
     // 都合の悪い文字列を削除する関数
     function _mRemove($text) {
@@ -14,17 +18,17 @@
         $text = preg_replace(array(
             // @screen_name 形式の文字列
             // コメントアウトすると通常ツイート時に突然リプライを飛ばせます
-            '/@[a-zA-Z0-9_]+/',
+            '/@[a-z0-9_]+/i',
             
             // URL っぽい文字列
-            '/https?:\/\/\S+/',
+            '/https?:\/\/\S+/i',
             
             // ハッシュタグ
             //'/#/',            // ハッシュタグ化をすべて回避する場合
-            '/#[a-zA-Z0-9_]+/', // 日本語ハッシュタグを生成したい場合,
+            '/#[a-z0-9_]+/i', // 日本語ハッシュタグを生成したい場合,
             
             // RT, QT 以降の文字列
-            '/[RrQq][Tt].*$/',
+            '/[RQ]T.*$/i',
             
             // '/このように{5,12}/',
             // '/[,\s]*カンマ[^区切りで]+/',
@@ -117,6 +121,18 @@
         // 30 件以外の TL のツイートを取得したい場合は count=30 の部分をお好みで設定してください。
         // 最大値は 200 ですが、多く設定し過ぎると処理に時間がかかるのでご注意ください
         return $this->_getData("https://api.twitter.com/1/statuses/home_timeline.xml?count=30");
+        
+        // TL の代わりにリストなどの読み込みも可能です。
+        
+        // @wktk の my-accounts というリストから最新 30 件のツイートを読み込む
+        // リスト名に全角文字や記号などが入っているとうまくいかないかも知れません
+        return $this->_getData("https://api.twitter.com/1/lists/statuses.xml?slug=my-accounts&owner_screen_name=wktk&per_page=30");
+        
+        // @wktk の最新 30 件のツイートを読み込む
+        return $this->_getData("https://api.twitter.com/1/statuses/user_timeline.xml?screen_name=wktk&count=30");
+        
+        // @wktk の fav ったツイートから最新 30 件を読み込む
+        return $this->_getData("https://api.twitter.com/1/favorites.xml?count=30&screen_name=wktk");
     }
     
     // マルコフ連鎖でツイートする関数
