@@ -79,7 +79,7 @@ API エンドポイント の指定について
 たとえば、以下のような指定が可能です。
   - タイムラインの最新 10 件  
     *https://api.twitter.com/1/statuses/home_timeline.xml?count=10*
-  - 受け取った @ ツイート最新 30 件
+  - 受け取った @ ツイート最新 30 件  
     *https://api.twitter.com/1/statuses/mentions.xml?count=30*
   - @[wktk](https://twitter.com/wktk) の最新 30 件のツイート  
     *https://api.twitter.com/1/statuses/user_timeline.xml?screen_name=wktk&count=30*
