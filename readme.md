@@ -1,6 +1,6 @@
 マルコフ連鎖 for EasyBotter
 ==========
-v1.32 (2012-05-26; 2.04beta)  
+v1.34 (2012-06-13; 2.04beta)  
   
 EasyMarkov  
 
@@ -24,7 +24,6 @@ https://twitter.com/wktk
 ----------
 - 拾うことに問題のないツイートだけを読み込む方がベターです。性質上ツイートの一部を引用するため、
   許可を得ずに行うことは、場合によってはあまり好ましくありません。
-- これを利用して発生した損害について私は一切の責任を負いません。
 
 
 使用手順
@@ -72,23 +71,21 @@ API エンドポイント の指定について
 連鎖用に取得するツイートの読み込み先を選択できます。  
 デフォルト (省略時) では、
   - タイムラインの最新 30 件  
-    *https://api.twitter.com/1/statuses/home_timeline.xml?count=30*
+    *http://api.twitter.com/1/statuses/home_timeline.xml?count=30*
 
 のツイートを連鎖に使用します。  
 
 たとえば、以下のような指定が可能です。
   - タイムラインの最新 10 件  
-    *https://api.twitter.com/1/statuses/home_timeline.xml?count=10*
+    *http://api.twitter.com/1/statuses/home_timeline.xml?count=10*
   - 受け取った @ ツイート最新 30 件  
-    *https://api.twitter.com/1/statuses/mentions.xml?count=30*
+    *http://api.twitter.com/1/statuses/mentions.xml?count=30*
   - @[wktk](https://twitter.com/wktk) の最新 30 件のツイート  
-    *https://api.twitter.com/1/statuses/user_timeline.xml?screen_name=wktk&count=30*
+    *http://api.twitter.com/1/statuses/user_timeline.xml?screen_name=wktk&count=30*
   - @[wktk](https://twitter.com/wktk) のリスト「my-accounts」から最新 30 件  
     リスト名に全角文字や記号などが入っているとうまくいかないかも知れません  
-    *https://api.twitter.com/1/lists/statuses.xml?owner_screen_name=wktk&slug=my-accounts&per_page=30*
+    *http://api.twitter.com/1/lists/statuses.xml?owner_screen_name=wktk&slug=my-accounts&per_page=30*
   - @[wktk](https://twitter.com/wktk) の fav ったツイートから最新 30 件を読み込む  
-    *https://api.twitter.com/1/favorites.xml?count=30&screen_name=wktk*
+    *http://api.twitter.com/1/favorites.xml?count=30&screen_name=wktk*
 
-取得件数の最大値は 200 (Twitter API 側の仕様) ですが、多くし過ぎると処理に時間がかかるうえ、形態素解析 API のリクエスト数上限に達するおそれが
-あるので、様子をみて調節してください。
-
+取得件数の最大値は 200 (Twitter API 側の仕様) ですが、多過ぎると処理の途中でタイムアウトしたり、形態素解析 API のリクエスト数上限に達するおそれがあるので、様子をみて調節してください。

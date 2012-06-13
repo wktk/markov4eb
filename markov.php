@@ -2,7 +2,7 @@
  * このファイルの中身を EasyBotter.php の class EasyBotter 内に貼りつけてください。
  * このファイルの 100 行目付近まではカスタムできる項目があります。
  * 
- * https://github.com/wktk/markov4eb (v1.32)
+ * https://github.com/wktk/markov4eb (v1.34)
  * https://twitter.com/wktk
  *
  *<?php //*/
@@ -10,8 +10,8 @@
     // 都合の悪い文字列を削除する関数
     function _mRemove($text) {
         // HTML エンティティをデコード
-        $text = str_replace(array('&amp;','&#039;'), array('&',"'"), $text);
-        $text = mb_decode_numericentity($text, array(0x0, 0x10000, 0, 0xfffff), "utf-8");
+        $text = str_replace(array('&amp;', '&#039;'), array('&', "'"), $text);
+        $text = mb_decode_numericentity($text, array(0x0, 0x10000, 0, 0xfffff), "UTF-8");
         $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
         
         // 文字列での削除 (NG ワード)
@@ -28,17 +28,17 @@
         $text = preg_replace(array(
             // @screen_name 形式の文字列
             // コメントアウトすると通常ツイート時に突然リプライを飛ばせます
-            '/(?:@|＠)[a-z0-9_]+/i',
+            '/(?:@|＠)\w+/',
             
-            // URL っぽい文字列
-            '/https?:\/\/\S+/i',
+            // URL
+            '|https?://t.co/\w+|i',
             
             // ハッシュタグ
-            //'/#/',            // ハッシュタグ化をすべて回避する場合
-            '/(?:#|＃)[a-z0-9_]+/i', // 日本語ハッシュタグを生成したい場合,
+            //'/#|＃/',      // ハッシュタグ化をすべて回避する場合
+            '/(?:#|＃)\w+/', // 日本語ハッシュタグを生成したい場合,
             
             // RT, QT 以降の文字列
-            '/[RQ]T.*$/i',
+            '/\s*[RQ]T.*$/is',
             
             // '/このように{5,12}/',
             // '/[,\s]*カンマ[^区切りで]+/',
@@ -70,7 +70,7 @@
                 || $tweet->source == 'twittbot.net'
                 || $tweet->source == 'EasyBotter'
                 || $tweet->source == 'Easybotter'
-                || $tweet->source == '★ツイ助★＜無料＞ツイッター多機能便利ツール'
+                || $tweet->source == 'ツイ助。'
                 || $tweet->source == 'MySweetBot'
                 || $tweet->source == 'BotMaker'
                 
@@ -115,7 +115,7 @@
     }
     
     // マルコフ連鎖でツイートする関数
-    function markov($appid, $endpoint = "https://api.twitter.com/1/statuses/home_timeline.xml?count=30", $table = array()) {
+    function markov($appid, $endpoint = "http://api.twitter.com/1/statuses/home_timeline.xml?count=30", $table = array()) {
         $timeline = array();
         if (!$table) {
             // タイムライン取得
@@ -137,8 +137,8 @@
                 //  (形態素解析 API の仕様により、一部のユーザー名が
                 //  バラバラになることがあるので一時的に置き換えます)
                 $exc = array();
-                while (preg_match('/@[a-zA-Z0-9_]+/', $text, $matches)) {
-                    $str  = preg_replace("/\d/", '', uniqid("", 1));
+                while (preg_match('/(?:@|＠)\w+/', $text, $matches)) {
+                    $str  = str_replace(range(0, 9), '', uniqid());
                     $text = str_replace($matches[0], $str, $text);
                     $exc[$str] = $matches[0];
                 }
@@ -150,9 +150,7 @@
                 foreach ($exc as $key => $val) $resp = str_replace($key, $val, $resp);
                 
                 // 単語毎に切る
-                $words = $this->_mXmlParse($resp, 'surface');
-                
-                $tweets[] = $words;
+                $tweets[] = $this->_mXmlParse($resp, 'surface');
             }
             unset($tweet);
             
@@ -167,13 +165,12 @@
         echo "EasyMarkov (Tweet) &gt; ". htmlspecialchars($status). "<br />\n";
         
         // 投稿して結果表示
-        $response = $this->setUpdate(array("status" => $status));
-        $this->showResult($response);
+        $this->showResult($this->setUpdate(array("status" => $status)));
         return $table;
     }
     
     // マルコフ連鎖でリプライする関数
-    function replymarkov($cron = 2, $appid, $endpoint = "https://api.twitter.com/1/statuses/home_timeline.xml?count=30", $table = array()) {
+    function replymarkov($cron = 2, $appid, $endpoint = "http://api.twitter.com/1/statuses/home_timeline.xml?count=30", $table = array()) {
         // リプライを取得・選別
         $replies = $this->getReplies();
         $replies = $this->getRecentTweets($replies, $cron * $this->_replyLoopLimit * 3);
@@ -201,7 +198,7 @@
             $tweets = array();
             foreach ($timeline as &$tweet) {
                 // @screen_name っぽい文字列を削除
-                $tweet = preg_replace('/\s*(?:@|＠)[a-zA-Z0-9_]+\s*/', '', (string)$tweet->text);
+                $tweet = preg_replace('/\s*(?:@|＠)\w+\s*/', '', $tweet->text);
                 
                 // エスケープ
                 $tweet = $this->_mRemove($tweet);
@@ -247,7 +244,7 @@
         $content = http_build_query(array(
             'appid'    => $appid,
             'sentence' => $text,
-            'response' => 'surface', // 読みと品詞 (reading,pos) をカット
+            'response' => 'surface', // 読みと品詞 (reading, pos) をカット
         ));
         $data = array('http' => array(
             'method' => 'POST',
@@ -276,7 +273,20 @@
         
         // 表を出力する (デバッグ用)
         $id = uniqid();
-        echo '<p>テーブルを <a onclick="document.getElementById(\''.$id.'\').style.display=\'block\';return false" href="#">表示</a> / <a onclick="document.getElementById(\''.$id.'\').style.display=\'none\';return false" href="#">非表示</a></p><div id=\''.$id.'\' style=\'display:none\'>'.str_replace(array("    ", '>', '<', "\n"), array(' ', '&gt;', '&lt;', '<br>'), print_r($table, true)).'<p>テーブルを <a onclick="document.getElementById(\''.$id.'\').style.display=\'block\';return false" href="#">表示</a> / <a onclick="document.getElementById(\''.$id.'\').style.display=\'none\';return false" href="#">非表示</a></p></div>';
+        $dump = str_replace(array("    ", '>', '<', "\n"), array('&nbsp;', '&gt;', '&lt;', '<br />'), print_r($table, true));
+        echo <<<HTML
+<p>
+  テーブルを <a onclick="document.getElementById('$id').style.display='block';return false" href="#">表示</a> /
+  <a onclick="document.getElementById('$id').style.display='none';return false" href="#">非表示</a>
+</p>
+<div id='$id' style='display:none'>
+  $dump
+  <p>
+    テーブルを <a onclick="document.getElementById('$id').style.display='block';return false" href="#">表示</a> /
+    <a onclick="document.getElementById('$id').style.display='none';return false" href="#">非表示</a>
+  </p>
+</div>
+HTML;
         return $table;
     }
     
