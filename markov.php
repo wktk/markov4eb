@@ -9,11 +9,6 @@
     
     // 都合の悪い文字列を削除する関数
     function _mRemove($text) {
-        // HTML エンティティをデコード
-        $text = str_replace(array('&amp;', '&#039;'), array('&', "'"), $text);
-        $text = mb_decode_numericentity($text, array(0x0, 0x10000, 0, 0xfffff), "UTF-8");
-        $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
-        
         // 文字列での削除 (NG ワード)
         $text = str_replace(array(
             '殺',
