@@ -2,7 +2,7 @@
  * このファイルの中身を EasyBotter.php の class EasyBotter 内に貼りつけてください。
  * このファイルの 100 行目付近まではカスタムできる項目があります。
  * 
- * https://github.com/wktk/markov4eb (v1.34)
+ * https://github.com/wktk/markov4eb (v1.36)
  * https://twitter.com/wktk
  *
  *<?php //*/
@@ -257,7 +257,9 @@
     // 解析結果から欲しい情報を取り出す関数
     function _mXmlParse($xml, $pat) {
         preg_match_all("/<". $pat. ">(.+?)<\/". $pat. ">/", $xml, $match);
-        return $match[1];
+        $words = array();
+        foreach ($match[1] as $word) $words[] = html_entity_decode($word, ENT_QUOTES, 'UTF-8');
+        return $words;
     }
     
     // マルコフ連鎖のマップをつくる関数

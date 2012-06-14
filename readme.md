@@ -1,6 +1,6 @@
 マルコフ連鎖 for EasyBotter
 ==========
-v1.34 (2012-06-13; 2.04beta)  
+v1.36 (2012-06-14; 2.04beta)  
   
 EasyMarkov  
 
