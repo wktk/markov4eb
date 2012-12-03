@@ -113,48 +113,45 @@
     }
 
     // マルコフ連鎖でツイートする関数
-    function markov($appid, $endpoint = "http://api.twitter.com/1.1/statuses/home_timeline.json?count=30", $table = array()) {
-        $timeline = array();
-        if (!$table) {
-            // タイムライン取得
-            $timeline = $this->_mTLChk($this->_mGetData($endpoint));
+    function markov($appid, $endpoint = "http://api.twitter.com/1.1/statuses/home_timeline.json?count=30") {
+        // タイムライン取得
+        $timeline = $this->_mTLChk($this->_mGetData($endpoint));
 
-            // TL があるか調べる
-            if (!$timeline) {
-                $result = "EasyMarkov (Tweet) &gt; 連鎖に使用できるツイートが TL にありませんでした。<br />\n";
-                echo $result;
-                return $result;
-            }
-
-            $tweets = array();
-            foreach ($timeline as &$tweet) {
-                // 文字列のエスケープ
-                $text = $tweet = $this->_mRemove((string)$tweet->text);
-
-                // ツイート内で拾ったユーザー名の、ランダム英文字列への置き換え
-                //  (形態素解析 API の仕様により、一部のユーザー名が
-                //  バラバラになることがあるので一時的に置き換えます)
-                $exc = array();
-                while (preg_match('/(?:@|＠)\w+/', $text, $matches)) {
-                    $str  = str_replace(range(0, 9), '', uniqid());
-                    $text = str_replace($matches[0], $str, $text);
-                    $exc[$str] = $matches[0];
-                }
-
-                // 元ツイートを Yahoo! に送って、その解析結果を取得
-                $resp = $this->_mMAParse($text, $appid);
-
-                // 置き換えたものを元に戻す
-                foreach ($exc as $key => $val) $resp = str_replace($key, $val, $resp);
-
-                // 単語毎に切る
-                $tweets[] = $this->_mXmlParse($resp, 'surface');
-            }
-            unset($tweet);
-
-            // 連鎖用の表にする
-            $table = $this->_mTable($tweets);
+        // TL があるか調べる
+        if (!$timeline) {
+            $result = "EasyMarkov (Tweet) &gt; 連鎖に使用できるツイートが TL にありませんでした。<br />\n";
+            echo $result;
+            return $result;
         }
+
+        $tweets = array();
+        foreach ($timeline as &$tweet) {
+            // 文字列のエスケープ
+            $text = $tweet = $this->_mRemove((string)$tweet->text);
+
+            // ツイート内で拾ったユーザー名の、ランダム英文字列への置き換え
+            //  (形態素解析 API の仕様により、一部のユーザー名が
+            //  バラバラになることがあるので一時的に置き換えます)
+            $exc = array();
+            while (preg_match('/(?:@|＠)\w+/', $text, $matches)) {
+                $str  = str_replace(range(0, 9), '', uniqid());
+                $text = str_replace($matches[0], $str, $text);
+                $exc[$str] = $matches[0];
+            }
+
+            // 元ツイートを Yahoo! に送って、その解析結果を取得
+            $resp = $this->_mMAParse($text, $appid);
+
+            // 置き換えたものを元に戻す
+            foreach ($exc as $key => $val) $resp = str_replace($key, $val, $resp);
+
+            // 単語毎に切る
+            $tweets[] = $this->_mXmlParse($resp, 'surface');
+        }
+        unset($tweet);
+
+        // 連鎖用の表にする
+        $table = $this->_mTable($tweets);
 
         // マルコフ連鎖で文をつくる
         $status = $this->_mCreate($table, $timeline);
@@ -164,11 +161,10 @@
 
         // 投稿して結果表示
         $this->showResult($this->setUpdate(array("status" => $status)));
-        return $table;
     }
 
     // マルコフ連鎖でリプライする関数
-    function replymarkov($cron = 2, $appid, $endpoint = "http://api.twitter.com/1.1/statuses/home_timeline.json?count=30", $table = array()) {
+    function replymarkov($cron = 2, $appid, $endpoint = "http://api.twitter.com/1.1/statuses/home_timeline.json?count=30") {
         // リプライを取得・選別
         $replies = $this->getReplies();
         $replies = $this->getRecentTweets($replies, $cron * $this->_replyLoopLimit * 3);
@@ -183,33 +179,30 @@
             return $result; // 以後の処理はしない
         }
 
-        $timeline = array();
-        if (!$table) {
-            // タイムライン取得
-            $timeline = $this->_mTLChk($this->_mGetData($endpoint));
-            if (!$timeline) {
-                $result = "EasyMarkov (Reply) &gt; 連鎖に使用できるツイートが TL にありませんでした。<br />\n";
-                echo $result;
-                return $result;
-            }
-
-            $tweets = array();
-            foreach ($timeline as &$tweet) {
-                // @screen_name っぽい文字列を削除
-                $tweet = preg_replace('/\s*(?:@|＠)\w+\s*/', '', $tweet->text);
-
-                // エスケープ
-                $tweet = $this->_mRemove($tweet);
-
-                // 単語ごとに切る
-                $text  = $this->_mMAParse($tweet, $appid);
-                $tweets[] = $this->_mXmlParse($text, 'surface');
-            }
-            unset($tweet);
-
-            // 連鎖用の表にする
-            $table = $this->_mTable($tweets);
+        // タイムライン取得
+        $timeline = $this->_mTLChk($this->_mGetData($endpoint));
+        if (!$timeline) {
+            $result = "EasyMarkov (Reply) &gt; 連鎖に使用できるツイートが TL にありませんでした。<br />\n";
+            echo $result;
+            return $result;
         }
+
+        $tweets = array();
+        foreach ($timeline as &$tweet) {
+            // @screen_name っぽい文字列を削除
+            $tweet = preg_replace('/\s*(?:@|＠)\w+\s*/', '', $tweet->text);
+
+            // エスケープ
+            $tweet = $this->_mRemove($tweet);
+
+            // 単語ごとに切る
+            $text  = $this->_mMAParse($tweet, $appid);
+            $tweets[] = $this->_mXmlParse($text, 'surface');
+        }
+        unset($tweet);
+
+        // 連鎖用の表にする
+        $table = $this->_mTable($tweets);
 
         foreach ($replies as $reply) {
             // マルコフ連鎖で文をつくる
@@ -233,7 +226,6 @@
         }
 
         if (!empty($this->_repliedReplies)) $this->saveLog();
-        return $table;
     }
 
     // Yahoo! に文章を送って、形態素解析の結果を取得する関数
