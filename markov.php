@@ -113,11 +113,11 @@
     }
     
     // マルコフ連鎖でツイートする関数
-    function markov($appid, $endpoint = "http://api.twitter.com/1/statuses/home_timeline.xml?count=30", $table = array()) {
+    function markov($appid, $endpoint = "http://api.twitter.com/1.1/statuses/home_timeline.json?count=30", $table = array()) {
         $timeline = array();
         if (!$table) {
             // タイムライン取得
-            $timeline = $this->_mTLChk($this->_getData($endpoint));
+            $timeline = $this->_mTLChk($this->_mGetData($endpoint));
             
             // TL があるか調べる
             if (!$timeline) {
@@ -168,7 +168,7 @@
     }
     
     // マルコフ連鎖でリプライする関数
-    function replymarkov($cron = 2, $appid, $endpoint = "http://api.twitter.com/1/statuses/home_timeline.xml?count=30", $table = array()) {
+    function replymarkov($cron = 2, $appid, $endpoint = "http://api.twitter.com/1.1/statuses/home_timeline.json?count=30", $table = array()) {
         // リプライを取得・選別
         $replies = $this->getReplies();
         $replies = $this->getRecentTweets($replies, $cron * $this->_replyLoopLimit * 3);
@@ -186,7 +186,7 @@
         $timeline = array();
         if (!$table) {
             // タイムライン取得
-            $timeline = $this->_mTLChk($this->_getData($endpoint));
+            $timeline = $this->_mTLChk($this->_mGetData($endpoint));
             if (!$timeline) { 
                 $result = "EasyMarkov (Reply) &gt; 連鎖に使用できるツイートが TL にありませんでした。<br />\n";
                 echo $result;
@@ -331,5 +331,11 @@ HTML;
         
         // フッタとリプ先も付けて返す
         return $replyto. $text. $this->_footer;
+    }
+    
+    // JSON か XML で Twitter API からデータ取得
+    function _mGetData($url) {
+      $resp = $this->consumer->sendRequest($url, array(), 'GET')->getBody();
+      return $url =~ /\.json(\?.*)$/ ? json_decode($resp) : simplexml_load_string($resp);
     }
 //==================================================================================================
