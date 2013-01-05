@@ -115,7 +115,7 @@
     // マルコフ連鎖でツイートする関数
     function markov($appid, $endpoint='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
         // タイムライン取得
-        $timeline = $this->_mTLChk($this->_mGetData($endpoint));
+        $timeline = $this->_mTLChk($this->_getData($endpoint));
 
         // TL があるか調べる
         if (!$timeline) {
@@ -180,7 +180,7 @@
         }
 
         // タイムライン取得
-        $timeline = $this->_mTLChk($this->_mGetData($endpoint));
+        $timeline = $this->_mTLChk($this->_getData($endpoint));
         if (!$timeline) {
             $result = "markov4eb (Reply) &gt; 連鎖に使用できるツイートが TL にありませんでした。<br />\n";
             echo $result;
@@ -323,11 +323,5 @@ HTML;
 
         // フッタとリプ先も付けて返す
         return $replyto. $text. $this->_footer;
-    }
-
-    // JSON か XML で Twitter API からデータ取得
-    function _mGetData($url) {
-      $resp = $this->consumer->sendRequest($url, array(), 'GET')->getBody();
-      return $url =~ /\.json(\?.*)$/ ? json_decode($resp) : simplexml_load_string($resp);
     }
 //==================================================================================================
