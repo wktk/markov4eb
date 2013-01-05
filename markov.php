@@ -127,26 +127,10 @@
         $tweets = array();
         foreach ($timeline as &$tweet) {
             // 文字列のエスケープ
-            $text = $tweet = $this->_mRemove($tweet['text']);
-
-            // ツイート内で拾ったユーザー名の、ランダム英文字列への置き換え
-            //  (形態素解析 API の仕様により、一部のユーザー名が
-            //  バラバラになることがあるので一時的に置き換えます)
-            $exc = array();
-            while (preg_match('/(?:@|＠)\w+/', $text, $matches)) {
-                $str  = str_replace(range(0, 9), '', uniqid());
-                $text = str_replace($matches[0], $str, $text);
-                $exc[$str] = $matches[0];
-            }
-
-            // 元ツイートを Yahoo! に送って、その解析結果を取得
-            $resp = $this->_mMAParse($text);
-
-            // 置き換えたものを元に戻す
-            foreach ($exc as $key => $val) $resp = str_replace($key, $val, $resp);
+            $tweet = $this->_mRemove($tweet['text']);
 
             // 単語毎に切る
-            $tweets[] = $this->_mXmlParse($resp, 'surface');
+            $tweets[] = $this->_mWakati($tweet);
         }
         unset($tweet);
 
@@ -193,11 +177,10 @@
             $tweet = preg_replace('/\s*(?:@|＠)\w+\s*/', '', $tweet['text']);
 
             // エスケープ
-            $tweet = $this->_mRemove($tweet);
+            $tweet = $this->_mRemove($tweet	);
 
             // 単語ごとに切る
-            $text = $this->_mMAParse($tweet);
-            $tweets[] = $this->_mXmlParse($text, 'surface');
+            $tweets[] = $this->_mWakati($tweet);
         }
         unset($tweet);
 
@@ -228,14 +211,26 @@
         if (!empty($this->_repliedReplies)) $this->saveLog();
     }
 
-    public $appid;
-    // Yahoo! に文章を送って、形態素解析の結果を取得する関数
-    function _mMAParse($text) {
+    // 日本語の文章を分かち書きする関数
+    function _mWakati($text) {
         if (empty($this->appid)) trigger_error('markov4eb: appid がセットされていません。$eb->appid = &quot;Your app id&quot;; の形式で、appid を設定してください。', E_USER_ERROR);
-        $url  = 'http://jlp.yahooapis.jp/MAService/V1/parse';
+
+        // @username のランダム英文字列への一時的な置き換え
+        $map = array();
+        while (preg_match('/(?:@|＠)\w+/', $text, $matches)) {
+            $str = str_replace(range(0, 9), '', uniqid());
+            $text = str_replace($matches[0], $str, $text);
+            $map[$str] = $matches[0];
+        }
+
+        // 形態素解析 API へのリクエスト
+        // ドキュメント: "テキスト解析:日本語形態素解析API - Yahoo!デベロッパーネットワーク"
+        //   http://developer.yahoo.co.jp/webapi/jlp/ma/v1/parse.html
+        $url = 'http://jlp.yahooapis.jp/MAService/V1/parse';
         $content = http_build_query(array(
             'appid'    => $this->appid,
             'sentence' => $text,
+            'results'  => 'ma', // 形態素解析の結果を取得する
             'response' => 'surface', // 読みと品詞 (reading, pos) をカット
         ));
         $data = array('http' => array(
@@ -243,14 +238,15 @@
             'header' => "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: ". strlen($content),
             'content' => $content,
         ));
-        return file_get_contents($url, false, stream_context_create($data));
-    }
+        $response = file_get_contents($url, false, stream_context_create($data));
 
-    // 解析結果から欲しい情報を取り出す関数
-    function _mXmlParse($xml, $pat) {
-        preg_match_all('/<'. $pat. '>(.+?)<\/'. $pat. '>/s', $xml, $match);
+        // 置き換えたものを元に戻す
+        $response = str_replace(array_keys($map), array_values($map), $response);
+
+        // 単語の配列をつくる
+        $xml = simplexml_load_string($response);
         $words = array();
-        foreach ($match[1] as $word) $words[] = html_entity_decode($word, ENT_QUOTES, 'UTF-8');
+        foreach ($xml->ma_result->word_list->word as $word) $words[] = (string)$word->surface;
         return $words;
     }
 
