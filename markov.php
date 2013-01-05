@@ -58,52 +58,52 @@
 
         $tl_ = array();
         foreach ($tl as $tweet) {
-            $tweet->source = preg_replace('/<[^>]+>/', '', $tweet->source);
+            $tweet['source'] = preg_replace('/<[^>]+>/', '', $tweet['source']);
             if (false
 
                 // いずれかの条件式が真になる場合拾いません
                 // 偽で拾わない様にしたい場合はその条件式の前に ! を付けて下さい
 
                 // bot のツイート
-                || $tweet->source == 'twittbot.net'
-                || $tweet->source == 'EasyBotter'
-                || $tweet->source == 'Easybotter'
-                || $tweet->source == 'ツイ助。'
-                || $tweet->source == 'MySweetBot'
-                || $tweet->source == 'BotMaker'
+                || $tweet['source'] == 'twittbot.net'
+                || $tweet['source'] == 'EasyBotter'
+                || $tweet['source'] == 'Easybotter'
+                || $tweet['source'] == 'ツイ助。'
+                || $tweet['source'] == 'MySweetBot'
+                || $tweet['source'] == 'BotMaker'
 
                 // 鍵垢の方
-                || $tweet->user->protected == 'true'
+                || $tweet['user']['protected'] == 'true'
 
                 // bot 自身
-                || $tweet->user->screen_name == $this->_screen_name
+                || $tweet['user']['screen_name'] == $this->_screen_name
 
                 // 公式 RT
-                || preg_match('/^RT/', $tweet->text)
+                || preg_match('/^RT/', $tweet['text'])
 
                 // 以下は TL 選別の設定例です
                 // 試してないのでうまく動かないかも知れません
 
                 // @wktk のツイートは拾わない
-                //|| $tweet->user->screen_name == 'wktk'
+                //|| $tweet['user']['screen_name'] == 'wktk'
 
                 // プロフィールの名前が正規表現にマッチしない方
-                //||!preg_match('/[a-zA-Z]{5,}/', $tweet->user->name)
+                //||!preg_match('/[a-zA-Z]{5,}/', $tweet['user']['name'])
 
                 // 設定言語が日本語でない方
-                //||!$tweet->user->lang == 'ja'
+                //||!$tweet['user']['lang'] == 'ja'
 
                 // プロフィールの紹介文に 転載 を含む方
-                //||stripos($tweet->user->description, '転載')
+                //||stripos($tweet['user']['description'], '転載')
 
                 // デフォルトアイコン (タマゴ) の方
-                //|| $tweet->user->default_profile_image == 'true'
+                //|| $tweet['user']['default_profile_image'] == 'true'
 
                 // フォロー比が高すぎる方
-                //|| (int)$tweet->user->friends_count / ((int)$tweet->user->followers_count + 1) > 10
+                //|| (int)$tweet['user']['friends_count'] / ((int)$tweet['user']['followers_count'] + 1) > 10
 
                 // 画像や動画に不適切な内容を含む可能性のあるツイート
-                //|| $tweet->possibly_sensitive == 'true'
+                //|| $tweet['possibly_sensitive'] == 'true'
             ) {}
 
             // 他は拾う
@@ -115,7 +115,7 @@
     // マルコフ連鎖でツイートする関数
     function markov($appid, $endpoint='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
         // タイムライン取得
-        $timeline = $this->_mTLChk($this->_getData($endpoint));
+        $timeline = $this->_mTLChk((array)$this->_getData($endpoint));
 
         // TL があるか調べる
         if (!$timeline) {
@@ -127,7 +127,7 @@
         $tweets = array();
         foreach ($timeline as &$tweet) {
             // 文字列のエスケープ
-            $text = $tweet = $this->_mRemove((string)$tweet->text);
+            $text = $tweet = $this->_mRemove($tweet['text']);
 
             // ツイート内で拾ったユーザー名の、ランダム英文字列への置き換え
             //  (形態素解析 API の仕様により、一部のユーザー名が
@@ -180,7 +180,7 @@
         }
 
         // タイムライン取得
-        $timeline = $this->_mTLChk($this->_getData($endpoint));
+        $timeline = $this->_mTLChk((array)$this->_getData($endpoint));
         if (!$timeline) {
             $result = "markov4eb (Reply) &gt; 連鎖に使用できるツイートが TL にありませんでした。<br />\n";
             echo $result;
@@ -190,7 +190,7 @@
         $tweets = array();
         foreach ($timeline as &$tweet) {
             // @screen_name っぽい文字列を削除
-            $tweet = preg_replace('/\s*(?:@|＠)\w+\s*/', '', $tweet->text);
+            $tweet = preg_replace('/\s*(?:@|＠)\w+\s*/', '', $tweet['text']);
 
             // エスケープ
             $tweet = $this->_mRemove($tweet);
@@ -206,7 +206,7 @@
 
         foreach ($replies as $reply) {
             // マルコフ連鎖で文をつくる
-            $status = $this->_mCreate($table, $timeline, "@{$reply->user->screen_name} ");
+            $status = $this->_mCreate($table, $timeline, "@{$reply['user']['screen_name']} ");
 
             // 出来た文章を表示
             echo 'markov4eb (Reply) &gt; '. htmlspecialchars($status). "<br />\n";
@@ -214,15 +214,15 @@
             // リプライを送信
             $response = $this->setUpdate(array(
                 'status' => $status,
-                'in_reply_to_status_id' => (string)$reply->id,
+                'in_reply_to_status_id' => $reply['id_str'],
             ));
 
             // 結果を表示
             $results[] = $this->showResult($response);
 
             // リプライ成功ならリプライ済みツイートに登録
-            if ($response->in_reply_to_status_id)
-                $this->_repliedReplies[] = (string)$response->in_reply_to_status_id;
+            if ($response['in_reply_to_status_id'])
+                $this->_repliedReplies[] = $response->in_reply_to_status_id_str;
         }
 
         if (!empty($this->_repliedReplies)) $this->saveLog();
