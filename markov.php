@@ -119,11 +119,12 @@
 
         // TL があるか調べる
         if (!$timeline) {
-            $result = "markov4eb (Tweet) &gt; 連鎖に使用できるツイートが TL にありませんでした。<br />\n";
-            echo $result;
+            $result = 'markov4eb (Tweet) > 連鎖に使用できるツイートが TL にありませんでした。';
+            echo htmlspecialchars($result). "<br />\n";
             return $result;
         }
 
+        // ツイートを単語ごとに区切る
         $tweets = array();
         foreach ($timeline as &$tweet) {
             // 文字列のエスケープ
@@ -134,11 +135,8 @@
         }
         unset($tweet);
 
-        // 連鎖用の表にする
-        $table = $this->_mCreateTable($tweets);
-
         // マルコフ連鎖で文をつくる
-        $status = $this->_mBuildSentence($table, $timeline);
+        $status = $this->_mBuildSentence($this->_mCreateTable($tweets), $timeline);
 
         // 出来た文章を表示
         echo 'markov4eb (Tweet) &gt; '. htmlspecialchars($status). "<br />\n";
@@ -150,27 +148,39 @@
     // マルコフ連鎖でリプライする関数
     function replymarkov($cron=2, $endpoint='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
         // リプライを取得・選別
-        $replies = $this->getReplies();
-        $replies = $this->getRecentTweets($replies, $cron * $this->_replyLoopLimit * 3);
-        $replies = $this->getRecentTweets($replies, $cron);
+        $response = $this->getReplies($this->_latestReply);
+        $response = $this->getRecentTweets($response, $cron * $replyLoopLimit * 3);
+        $replies = $this->getRecentTweets($response, $cron);
         $replies = $this->selectTweets($replies);
-        $replies = $this->removeRepliedTweets($replies);
-        $replies = array_reverse($replies);
 
         if (!$replies) {
-            $result = "markov4eb (Reply) &gt; $cron 分以内に受け取った @ はないようです。<br />\n";
-            echo $result;
+            $result = "markov4eb (Reply) > $cron 分以内に受け取った @ はないようです。";
+            echo htmlspecialchars($result). "<br />\n";
             return $result; // 以後の処理はしない
         }
+
+        // ループチェック
+        $replyUsers = array();
+        foreach ($response as $r) $replyUsers[] = $r['user']['screen_name'];
+        $countReplyUsers = array_count_values($replyUsers);
+        $replies2 = array();
+        foreach ($replies as $reply) {
+            $userName = $reply['user']['screen_name'];
+            if ($countReplyUsers[$userName] < $this->_replyLoopLimit) $replies2[] = $reply;
+        }
+
+        // 古い順にする
+        $replies = array_reverse($replies2);
 
         // タイムライン取得
         $timeline = $this->_mCheckTimeline((array)$this->_getData($endpoint));
         if (!$timeline) {
-            $result = "markov4eb (Reply) &gt; 連鎖に使用できるツイートが TL にありませんでした。<br />\n";
-            echo $result;
+            $result = 'markov4eb (Reply) > 連鎖に使用できるツイートが TL にありませんでした。';
+            echo htmlspecialchars($result). "<br />\n";
             return $result;
         }
 
+        // ツイートを単語ごとに区切る
         $tweets = array();
         foreach ($timeline as &$tweet) {
             // @screen_name っぽい文字列を削除
@@ -210,6 +220,8 @@
 
         if (!empty($this->_repliedReplies)) $this->saveLog();
     }
+
+    // パターンにマッチしなかったらマルコフ連鎖でリプライする関数
 
     // 日本語の文章を分かち書きする関数
     function _mWakati($text) {
@@ -311,10 +323,10 @@ HTML;
 
             // 連結後の文章が、元ツイートと全く同じ時は再試行 (丸パクリ削減)
             if (in_array($text, $timeline)) {
-                echo "ボツツイート (丸パク気味): $text\n<br />";
+                echo "ボツツイート (丸パク気味): ". htmlspecialchars($text). "\n<br />";
             }
             elseif ($i < 4) {
-                echo "ボツツイート (みじかすぎ): $text\n<br />";
+                echo "ボツツイート (みじかすぎ): ". htmlspecialchars($text). "\n<br />";
             }
             else break; // 文章決定
         }
