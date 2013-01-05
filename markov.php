@@ -8,7 +8,7 @@
  *<?php //*/
 
     // 都合の悪い文字列を削除する関数
-    function _mRemove($text) {
+    function _mEscape($text) {
         // HTML エンティティをデコード
         $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
 
@@ -51,7 +51,7 @@
     }
 
     // タイムラインから拾うツイートをマルコフ連鎖用に選別する関数
-    function _mTLChk($tl) {
+    function _mCheckTimeline($tl) {
 
         // 選別しない場合は次行を利用
         // return $tl;
@@ -61,7 +61,7 @@
             $tweet['source'] = preg_replace('/<[^>]+>/', '', $tweet['source']);
             if (false
 
-                // いずれかの条件式が真になる場合拾いません
+                // 拾わないツイートの条件を設定してください
                 // 偽で拾わない様にしたい場合はその条件式の前に ! を付けて下さい
 
                 // bot のツイート
@@ -115,7 +115,7 @@
     // マルコフ連鎖でツイートする関数
     function markov($endpoint='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
         // タイムライン取得
-        $timeline = $this->_mTLChk((array)$this->_getData($endpoint));
+        $timeline = $this->_mCheckTimeline((array)$this->_getData($endpoint));
 
         // TL があるか調べる
         if (!$timeline) {
@@ -127,7 +127,7 @@
         $tweets = array();
         foreach ($timeline as &$tweet) {
             // 文字列のエスケープ
-            $tweet = $this->_mRemove($tweet['text']);
+            $tweet = $this->_mEscape($tweet['text']);
 
             // 単語毎に切る
             $tweets[] = $this->_mWakati($tweet);
@@ -135,10 +135,10 @@
         unset($tweet);
 
         // 連鎖用の表にする
-        $table = $this->_mTable($tweets);
+        $table = $this->_mCreateTable($tweets);
 
         // マルコフ連鎖で文をつくる
-        $status = $this->_mCreate($table, $timeline);
+        $status = $this->_mBuildSentence($table, $timeline);
 
         // 出来た文章を表示
         echo 'markov4eb (Tweet) &gt; '. htmlspecialchars($status). "<br />\n";
@@ -164,7 +164,7 @@
         }
 
         // タイムライン取得
-        $timeline = $this->_mTLChk((array)$this->_getData($endpoint));
+        $timeline = $this->_mCheckTimeline((array)$this->_getData($endpoint));
         if (!$timeline) {
             $result = "markov4eb (Reply) &gt; 連鎖に使用できるツイートが TL にありませんでした。<br />\n";
             echo $result;
@@ -177,7 +177,7 @@
             $tweet = preg_replace('/\s*(?:@|＠)\w+\s*/', '', $tweet['text']);
 
             // エスケープ
-            $tweet = $this->_mRemove($tweet	);
+            $tweet = $this->_mEscape($tweet);
 
             // 単語ごとに切る
             $tweets[] = $this->_mWakati($tweet);
@@ -185,11 +185,11 @@
         unset($tweet);
 
         // 連鎖用の表にする
-        $table = $this->_mTable($tweets);
+        $table = $this->_mCreateTable($tweets);
 
         foreach ($replies as $reply) {
             // マルコフ連鎖で文をつくる
-            $status = $this->_mCreate($table, $timeline, "@{$reply['user']['screen_name']} ");
+            $status = $this->_mBuildSentence($table, $timeline, "@{$reply['user']['screen_name']} ");
 
             // 出来た文章を表示
             echo 'markov4eb (Reply) &gt; '. htmlspecialchars($status). "<br />\n";
@@ -251,7 +251,7 @@
     }
 
     // マルコフ連鎖のマップをつくる関数
-    function _mTable($tweets) {
+    function _mCreateTable($tweets) {
         $table = array();
         foreach ($tweets as $words) {
             if (count($words) > 3) {
@@ -281,7 +281,7 @@ HTML;
     }
 
     // マップから文を組み立てる関数
-    function _mCreate($table, $timeline, $replyto='') {
+    function _mBuildSentence($table, $timeline, $replyto='') {
 
         // フッタとリプ先ユーザー名の長さ
         $length = mb_strlen($this->_footer. $replyto, 'UTF-8');
