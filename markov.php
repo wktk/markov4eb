@@ -113,7 +113,7 @@
     }
 
     // マルコフ連鎖でツイートする関数
-    function markov($appid, $endpoint='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
+    function markov($endpoint='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
         // タイムライン取得
         $timeline = $this->_mTLChk((array)$this->_getData($endpoint));
 
@@ -140,7 +140,7 @@
             }
 
             // 元ツイートを Yahoo! に送って、その解析結果を取得
-            $resp = $this->_mMAParse($text, $appid);
+            $resp = $this->_mMAParse($text);
 
             // 置き換えたものを元に戻す
             foreach ($exc as $key => $val) $resp = str_replace($key, $val, $resp);
@@ -164,7 +164,7 @@
     }
 
     // マルコフ連鎖でリプライする関数
-    function replymarkov($cron=2, $appid, $endpoint='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
+    function replymarkov($cron=2, $endpoint='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
         // リプライを取得・選別
         $replies = $this->getReplies();
         $replies = $this->getRecentTweets($replies, $cron * $this->_replyLoopLimit * 3);
@@ -196,7 +196,7 @@
             $tweet = $this->_mRemove($tweet);
 
             // 単語ごとに切る
-            $text = $this->_mMAParse($tweet, $appid);
+            $text = $this->_mMAParse($tweet);
             $tweets[] = $this->_mXmlParse($text, 'surface');
         }
         unset($tweet);
@@ -228,11 +228,13 @@
         if (!empty($this->_repliedReplies)) $this->saveLog();
     }
 
+    public $appid;
     // Yahoo! に文章を送って、形態素解析の結果を取得する関数
-    function _mMAParse($text, $appid) {
+    function _mMAParse($text) {
+        if (empty($this->appid)) trigger_error('markov4eb: appid がセットされていません。$eb->appid = &quot;Your app id&quot;; の形式で、appid を設定してください。', E_USER_ERROR);
         $url  = 'http://jlp.yahooapis.jp/MAService/V1/parse';
         $content = http_build_query(array(
-            'appid'    => $appid,
+            'appid'    => $this->appid,
             'sentence' => $text,
             'response' => 'surface', // 読みと品詞 (reading, pos) をカット
         ));
