@@ -1,6 +1,6 @@
 markov4eb
 ==========
-v1.40 (2012-01-08; 2.1.1)  
+v1.40 (2013-01-08; 2.1.1)  
 
 https://github.com/wktk/markov4eb  
 https://twitter.com/wktk
