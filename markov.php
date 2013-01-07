@@ -178,7 +178,7 @@
             $status = '';
 
             // 指定されたリプライパターンと照合
-            foreach ($this->_replyPatternData[$patternFile] as $pattern => $res) {
+            foreach ((array)$this->_replyPatternData[$patternFile] as $pattern => $res) {
                 if (preg_match("@{$pattern}@u", $reply['text'], $matches)) {
                     $status = $res[array_rand($res)];
                     for ($i=1; $i<count($matches); $i++) {
