@@ -2,7 +2,7 @@
  * このファイルの中身を EasyBotter.php の class EasyBotter 内に貼りつけてください。
  * このファイルの 100 行目付近まではカスタムできる項目があります。
  *
- * https://github.com/wktk/markov4eb (v1.38)
+ * https://github.com/wktk/markov4eb (v1.40)
  * https://twitter.com/wktk
  *
  *<?php //*/
@@ -25,7 +25,7 @@
         // 正規表現を利用した削除
         $text = preg_replace(array(
             // @screen_name 形式の文字列
-            // コメントアウトすると通常ツイート時に突然リプライを飛ばせます
+            // 無効化すると通常ツイート時に @mention を飛ばすことがあります
             '/(?:@|＠)\w+/',
 
             // URL
@@ -33,7 +33,7 @@
 
             // ハッシュタグ
             //'/#|＃/',      // ハッシュタグ化をすべて回避する場合
-            '/(?:#|＃)\w+/', // 日本語ハッシュタグを生成したい場合
+            '/(?:#|＃)\w+/', // 英語ハッシュタグのみ回避する場合
 
             // RT, QT 以降の文字列
             '/\s*[RQ]T.*$/is',
@@ -45,7 +45,8 @@
         ), '', $text); // マッチした部分を全て削除
 
         // 連続する空白をまとめる
-        $text = preg_replace('/\s+/', ' ', $text);
+        $text = preg_replace('/(?:　|\s)+/', ' ', $text);
+        $text = preg_replace('/^(?:　|\s)|(?:　|\s)$/', '', $text);
 
         return $text;
     }
@@ -61,8 +62,7 @@
             $tweet['source'] = preg_replace('/<[^>]+>/', '', $tweet['source']);
             if (false
 
-                // 拾わないツイートの条件を設定してください
-                // 偽で拾わない様にしたい場合はその条件式の前に ! を付けて下さい
+                // 「拾わない」ツイートの条件を設定できます
 
                 // bot のツイート
                 || $tweet['source'] == 'twittbot.net'
@@ -73,12 +73,12 @@
                 || $tweet['source'] == 'BotMaker'
 
                 // 鍵垢の方
-                || $tweet['user']['protected'] == 'true'
+                || $tweet['user']['protected'] == true
 
                 // bot 自身
                 || $tweet['user']['screen_name'] == $this->_screen_name
 
-                // 公式 RT
+                // RT
                 || preg_match('/^RT/', $tweet['text'])
 
                 // 以下は TL 選別の設定例です
@@ -97,13 +97,13 @@
                 //||stripos($tweet['user']['description'], '転載')
 
                 // デフォルトアイコン (タマゴ) の方
-                //|| $tweet['user']['default_profile_image'] == 'true'
+                //|| $tweet['user']['default_profile_image'] == true
 
                 // フォロー比が高すぎる方
                 //|| (int)$tweet['user']['friends_count'] / ((int)$tweet['user']['followers_count'] + 1) > 10
 
                 // 画像や動画に不適切な内容を含む可能性のあるツイート
-                //|| $tweet['possibly_sensitive'] == 'true'
+                //|| $tweet['possibly_sensitive'] == true
             ) {}
 
             // 他は拾う
@@ -113,32 +113,38 @@
     }
 
     // マルコフ連鎖でツイートする関数
-    function markov($endpoint='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
+    function markov($url='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
         // タイムラインからテーブルを生成
-        list($table, $timeline) = $this->_mGetTableByURL($endpoint, 'Tweet');
+        list($table, $timeline) = $this->_mGetTableByURL($url, 'Tweet');
         if (!$table) return $timeline;
 
         // マルコフ連鎖で文をつくる
         $status = $this->_mBuildSentence($table, $timeline);
 
         // 出来た文章を表示
-        echo 'markov4eb (Tweet) &gt; '. htmlspecialchars($status). "<br />\n";
+        echo 'markov4eb (Tweet) &gt; '. htmlspecialchars($status). "\n";
 
         // 投稿して結果表示
-        $this->showResult($this->setUpdate(array('status' => $status)));
+        $this->showResult($this->setUpdate(array('status' => $status)), $status);
     }
 
     // マルコフ連鎖でリプライする関数
-    function replyMarkov($cron=2, $endpoint='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
+    function replyMarkov($cron=2, $url='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
+        // replyPatternMarkov() のパターンファイルがないものとして扱う
+        return $this->replyPatternMarkov($cron, '', $url);
+    }
+
+    // パターンにマッチしなかったらマルコフ連鎖でリプライする関数
+    function replyPatternMarkov($cron=2, $patternFile='reply_pattern.php', $url='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
         // リプライを取得・選別
         $response = $this->getReplies($this->_latestReply);
-        $response = $this->getRecentTweets($response, $cron * $replyLoopLimit * 3);
+        $response = $this->getRecentTweets($response, $cron * $this->_replyLoopLimit * 3);
         $replies = $this->getRecentTweets($response, $cron);
         $replies = $this->selectTweets($replies);
 
         if (!$replies) {
             $result = "markov4eb (Reply) > $cron 分以内に受け取った @ はないようです。";
-            echo htmlspecialchars($result). "<br />\n";
+            echo htmlspecialchars($result). "\n";
             return $result; // 以後の処理はしない
         }
 
@@ -154,61 +160,12 @@
 
         // 古い順にする
         $replies = array_reverse($replies2);
-
-        // タイムラインからテーブルを取得
-        list($table, $timeline) = $this->_mGetTableByURL($endpoint, 'Reply');
-        if (!$table) return $timeline;
-
-        foreach ($replies as $reply) {
-            // マルコフ連鎖で文をつくる
-            $status = $this->_mBuildSentence($table, $timeline, "@{$reply['user']['screen_name']} ");
-
-            // 出来た文章を表示
-            echo 'markov4eb (Reply) &gt; '. htmlspecialchars($status). "<br />\n";
-
-            // リプライを送信
-            $response = $this->setUpdate(array(
-                'status' => $status,
-                'in_reply_to_status_id' => $reply['id_str'],
-            ));
-
-            // 結果を表示
-            $results[] = $this->showResult($response);
-
-            // リプライ成功ならリプライ済みツイートに登録
-            if ($response['in_reply_to_status_id'])
-                $this->_repliedReplies[] = $response->in_reply_to_status_id_str;
-        }
-
-        if (!empty($this->_repliedReplies)) $this->saveLog();
-    }
-
-    // パターンにマッチしなかったらマルコフ連鎖でリプライする関数
-    function replyPatternMarkov($cron=2, $patternFile='reply_pattern.php', $endpoint='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
-        // リプライを取得・選別
-        $response = $this->getReplies($this->_latestReply);
-        $response = $this->getRecentTweets($response, $cron * $replyLoopLimit * 3);
-        $replies = $this->getRecentTweets($response, $cron);
-        $replies = $this->selectTweets($replies);
 
         if (!$replies) {
-            $result = "markov4eb (ReplyPattern) > $cron 分以内に受け取った @ はないようです。";
-            echo htmlspecialchars($result). "<br />\n";
+            $result = "markov4eb (Reply) > 返答する @ がないようです。";
+            echo htmlspecialchars($result). "\n";
             return $result; // 以後の処理はしない
         }
-
-        // ループチェック
-        $replyUsers = array();
-        foreach ($response as $r) $replyUsers[] = $r['user']['screen_name'];
-        $countReplyUsers = array_count_values($replyUsers);
-        $replies2 = array();
-        foreach ($replies as $reply) {
-            $userName = $reply['user']['screen_name'];
-            if ($countReplyUsers[$userName] < $this->_replyLoopLimit) $replies2[] = $reply;
-        }
-
-        // 古い順にする
-        $replies = array_reverse($replies2);
 
         // パターンファイルの読み込み
         if (empty($this->_replyPatternData[$patternFile]) && !empty($patternFile)){
@@ -216,6 +173,7 @@
         }
 
         $results = array();
+        $repliedReplies = array();
         foreach ($replies as $reply) {
             $status = '';
 
@@ -230,22 +188,26 @@
                 }
             }
 
-            // パターンにマッチしない場合
-            if (!$status) {
-                // タイムラインからテーブルを作る
-               if (!$this->pattern_table) {
-                    list($this->pattern_table, $this->pattern_tl) = $this->_mGetTableByURL($endpoint, 'ReplyPattern');
-                    if (!$table) {
-                      $results[] = $timeline;
-                      next;
+            // パターンにマッチしたら @username とフッタをつける
+            if ($status) $status = "@{$reply['user']['screen_name']} {$status}{$this->_footer}";
+
+            // パターンにマッチしない場合はマルコフ
+            else {
+                // キャッシュしたテーブルがない場合
+                if (!$this->_mtable) {
+                    // タイムラインからテーブルを作る
+                    list($this->_mtable, $this->_mtl) = $this->_mGetTableByURL($url, 'Reply');
+                    if (!$this->_mtable) {
+                      $results[] = $this->_mtl;
+                      continue; // 次のリプライへ
                     }
                 }
 
                 // マルコフ連鎖で文をつくる
-                $status = $this->_mBuildSentence($this->pattern_table, $this->pattern_tl, "@{$reply['user']['screen_name']} ");
+                $status = $this->_mBuildSentence($this->_mtable, $this->_mtl, "@{$reply['user']['screen_name']} ");
 
                 // 出来た文章を表示
-                echo 'markov4eb (Reply) &gt; '. htmlspecialchars($status). "<br />\n";
+                echo 'markov4eb (Reply) &gt; '. htmlspecialchars($status). "\n";
             }
 
             // リプライを送信
@@ -255,15 +217,18 @@
             ));
 
             // 結果を表示
-            $results[] = $this->showResult($response);
+            $results[] = $this->showResult($response, $status);
 
             // リプライ成功ならリプライ済みツイートに登録
             if ($response['in_reply_to_status_id'])
-                $this->_repliedReplies[] = $response->in_reply_to_status_id_str;
+                $repliedReplies[] = $response['in_reply_to_status_id_str'];
         }
 
-        unset($this->pattern_table, $this->pattern_tl);
-        if (!empty($this->_repliedReplies)) $this->saveLog();
+        unset($this->_mtable, $this->_mtl);
+        if (!empty($repliedReplies)) {
+            rsort($repliedReplies);
+            $this->saveLog('latest_reply', $repliedReplies[0]);
+        }
     }
 
     // タイムラインの URL から連鎖用テーブルを作る関数
@@ -272,16 +237,18 @@
         $timeline = $this->_mCheckTimeline((array)$this->_getData($url));
         if (!$timeline) {
             $result = "markov4eb ({$type}) > 連鎖に使用できるツイートが TL にありませんでした。";
-            echo htmlspecialchars($result). "<br />\n";
+            echo htmlspecialchars($result). "\n";
             return array(false, $result);
         }
 
         // ツイートを単語ごとに区切る
         $tweets = array();
         foreach ($timeline as &$tweet) {
+            $tweet = $tweet['text'];
+
             // リプライのときは @screen_name っぽい文字列を削除
             if (preg_match('/reply/i', $type)) {
-                $tweet = preg_replace('/\s*(?:@|＠)\w+\s*/', '', $tweet['text']);
+                $tweet = preg_replace('/\s*(?:@|＠)\w+\s*/', '', $tweet);
             }
 
             // エスケープ
@@ -350,17 +317,15 @@
 
         // 表を出力する (デバッグ用)
         $id = uniqid();
-        $dump = str_replace(array('    ', '>', '<', "\n"), array('&nbsp;', '&gt;', '&lt;', '<br />'), print_r($table, true));
+        $dump = str_replace(array('    ', '>', '<'), array('&nbsp;', '&gt;', '&lt;'), print_r($table, true));
         echo <<<HTML
 <p>
-  テーブルを <a onclick="document.getElementById('$id').style.display='block';return false" href="#">表示</a> /
-  <a onclick="document.getElementById('$id').style.display='none';return false" href="#">非表示</a>
+  テーブルを <a onclick="document.getElementById('$id').style.display='block';return false" href="#">表示</a> / <a onclick="document.getElementById('$id').style.display='none';return false" href="#">非表示</a>
 </p>
 <div id='$id' style='display:none'>
   $dump
   <p>
-    テーブルを <a onclick="document.getElementById('$id').style.display='block';return false" href="#">表示</a> /
-    <a onclick="document.getElementById('$id').style.display='none';return false" href="#">非表示</a>
+    テーブルを <a onclick="document.getElementById('$id').style.display='block';return false" href="#">表示</a> / <a onclick="document.getElementById('$id').style.display='none';return false" href="#">非表示</a>
   </p>
 </div>
 HTML;
@@ -369,9 +334,12 @@ HTML;
 
     // マップから文を組み立てる関数
     function _mBuildSentence($table, $timeline, $replyto='') {
-
         // フッタとリプ先ユーザー名の長さ
-        $length = mb_strlen($this->_footer. $replyto, 'UTF-8');
+        if (function_exists('mb_strlen')) {
+            $length = mb_strlen($this->_footer. $replyto, 'UTF-8');
+        } else {
+            $length = strlen($this->_footer. $replyto);
+        }
 
         // 再試行が 50 回目になったら再試行を諦める
         for ($k = 0; $k < 50; $k++) {
@@ -390,18 +358,25 @@ HTML;
                 $text .= $word;
 
                 // 長くなり過ぎたら適当に切って終了
-                if (mb_strlen($text, 'UTF-8') + $length > 140) {
-                    $text = mb_substr($text, 0, 140 - $length, 'UTF-8');
-                    break;
+                if (function_exists('mb_strlen')) {
+                    if (mb_strlen($text, 'UTF-8') + $length > 140) {
+                        $text = mb_substr($text, 0, 140 - $length, 'UTF-8');
+                        break;
+                    }
+                } else {
+                    if (strlen($text) + $length > 140)  {
+                        $text = substr($text, 0, 140 - $length);
+                        break;
+                    }
                 }
             }
 
             // 連結後の文章が、元ツイートと全く同じ時は再試行 (丸パクリ削減)
             if (in_array($text, $timeline)) {
-                echo "ボツツイート (丸パク気味): ". htmlspecialchars($text). "\n<br />";
+                echo 'ボツツイート (丸パク気味): '. htmlspecialchars($text). "\n";
             }
             elseif ($i < 4) {
-                echo "ボツツイート (みじかすぎ): ". htmlspecialchars($text). "\n<br />";
+                echo 'ボツツイート (みじかすぎ): '. htmlspecialchars($text). "\n";
             }
             else break; // 文章決定
         }
