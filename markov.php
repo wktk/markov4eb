@@ -2,7 +2,7 @@
  * このファイルの中身を EasyBotter.php の class EasyBotter 内に貼りつけてください。
  * このファイルの 100 行目付近まではカスタムできる項目があります。
  *
- * https://github.com/wktk/markov4eb (v1.40)
+ * https://github.com/wktk/markov4eb (v1.42)
  * https://twitter.com/wktk
  *
  *<?php //*/
@@ -220,8 +220,10 @@
             $results[] = $this->showResult($response, $status);
 
             // リプライ成功ならリプライ済みツイートに登録
-            if ($response['in_reply_to_status_id'])
+            if ($response['in_reply_to_status_id']) {
+                $this->saveLog('latest_reply', $response['in_reply_to_status_id_str']);
                 $repliedReplies[] = $response['in_reply_to_status_id_str'];
+            }
         }
 
         unset($this->_mtable, $this->_mtl);
