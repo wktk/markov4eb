@@ -1,4 +1,4 @@
-markov4eb
+markov4eb [![Build Status](https://travis-ci.org/wktk/markov4eb.png)](https://travis-ci.org/wktk/markov4eb)
 ==========
 v1.40 (2013-01-08; 2.1.1)  
 
