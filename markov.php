@@ -113,7 +113,7 @@
     }
 
     // マルコフ連鎖でツイートする関数
-    function markov($url='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
+    function markov($url='https://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
         // タイムラインからテーブルを生成
         list($table, $timeline) = $this->_mGetTableByURL($url, 'Tweet');
         if (!$table) return $timeline;
@@ -129,13 +129,13 @@
     }
 
     // マルコフ連鎖でリプライする関数
-    function replyMarkov($cron=2, $url='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
+    function replyMarkov($cron=2, $url='https://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
         // replyPatternMarkov() のパターンファイルがないものとして扱う
         return $this->replyPatternMarkov($cron, '', $url);
     }
 
     // パターンにマッチしなかったらマルコフ連鎖でリプライする関数
-    function replyPatternMarkov($cron=2, $patternFile='reply_pattern.php', $url='http://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
+    function replyPatternMarkov($cron=2, $patternFile='reply_pattern.php', $url='https://api.twitter.com/1.1/statuses/home_timeline.json?count=30') {
         // リプライを取得・選別
         $response = $this->getReplies($this->_latestReply);
         $response = $this->getRecentTweets($response, $cron * $this->_replyLoopLimit * 3);

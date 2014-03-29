@@ -55,7 +55,7 @@ https://twitter.com/wktk
     - 値を省略するとデフォルト値が使用されます。
         - cron 間隔: 2 (分)
         - パターンファイル: reply_pattern.php
-        - タイムライン取得 URL: `http://api.twitter.com/1.1/statuses/home_timeline.json?count=30`
+        - タイムライン取得 URL: `https://api.twitter.com/1.1/statuses/home_timeline.json?count=30`
     - 「タイムライン取得 URL」については後述します。省略すると home_timeline を取得します。
 
 5.  __Yahoo! デベロッパーネットワークのクレジット表示__  
@@ -69,22 +69,22 @@ https://twitter.com/wktk
 文章生成の素材用に取得するツイートの読み込み先を選択できます。  
 デフォルト (省略時) では、
   - タイムラインの最新 30 件  
-    `http://api.twitter.com/1.1/statuses/home_timeline.json?count=30`
+    `https://api.twitter.com/1.1/statuses/home_timeline.json?count=30`
 
 のツイートを連鎖に使用します。  
 
 たとえば、以下のような指定が可能です。
   - タイムラインの最新 10 件  
-    `http://api.twitter.com/1.1/statuses/home_timeline.json?count=10`
+    `https://api.twitter.com/1.1/statuses/home_timeline.json?count=10`
   - 受け取った @ ツイート最新 30 件  
-    `http://api.twitter.com/1.1./statuses/mentions_timeline.json?count=30`
+    `https://api.twitter.com/1.1./statuses/mentions_timeline.json?count=30`
   - @[wktk](https://twitter.com/wktk) の最新 30 件のツイート  
-    `http://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=wktk&count=30`
+    `https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=wktk&count=30`
   - @[wktk](https://twitter.com/wktk) のリスト「my-accounts」から最新 30 件  
     リスト名に全角文字や記号などが入っているとうまくいかないかも知れません  
-    `http://api.twitter.com/1.1/lists/statuses.json?owner_screen_name=wktk&slug=my-accounts&per_page=30`
+    `https://api.twitter.com/1.1/lists/statuses.json?owner_screen_name=wktk&slug=my-accounts&per_page=30`
   - @[wktk](https://twitter.com/wktk) の fav ったツイートから最新 30 件を読み込む  
-    `http://api.twitter.com/1.1/favorites/list.json?count=30&screen_name=wktk`
+    `https://api.twitter.com/1.1/favorites/list.json?count=30&screen_name=wktk`
 
 取得件数の最大値は 200 (Twitter API 側の仕様) ですが、多過ぎると処理の途中でタイムアウトしたり、
 形態素解析 API のリクエスト数上限に達するおそれがあります。
